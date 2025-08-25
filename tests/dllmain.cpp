@@ -55,6 +55,9 @@ DWORD __stdcall thread_entry(void* const module)
         std::this_thread::sleep_for(std::chrono::microseconds(25));
     }
 
+    method->set_compiled_entry(original_compiled_method_handler);
+    method->set_interpreted_entry(original_interpreted_method_handler);
+
     FreeLibraryAndExitThread(static_cast<HMODULE>(module), 0);
 }
 
