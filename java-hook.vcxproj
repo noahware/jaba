@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\jvm.hpp" />
+    <ClInclude Include="src\trap_frame.hpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="src\hook.asm" />

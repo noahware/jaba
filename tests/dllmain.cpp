@@ -3,6 +3,7 @@
 #include "jni/jni.h"
 
 #include "../src/jvm.hpp"
+#include "../src/trap_frame.hpp"
 
 extern "C" std::uint8_t* original_compiled_method_handler = nullptr;
 extern "C" std::uint8_t* original_interpreted_method_handler = nullptr;
@@ -34,6 +35,11 @@ namespace java
 
         return jump_method;
     }
+}
+
+extern "C" void method_detour(trap_frame_t* const trap_frame, void* const original_method_handler)
+{
+	
 }
 
 DWORD __stdcall thread_entry(void* const module)
