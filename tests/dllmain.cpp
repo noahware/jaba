@@ -4,6 +4,11 @@
 
 #include "../src/jvm.hpp"
 
+extern "C" std::uint8_t* original_compiled_method_handler = nullptr;
+extern "C" std::uint8_t* original_interpreted_method_handler = nullptr;
+
+extern "C" void compiled_method_hook_handler();
+extern "C" void interpreted_method_hook_handler();
 
 namespace java
 {
@@ -36,6 +41,14 @@ DWORD __stdcall thread_entry(void* const module)
     java::set_up();
 
     const jmethodID sample_method = java::get_sample_method();
+
+    method_t* const method = *reinterpret_cast<method_t**>(sample_method);
+
+    original_compiled_method_handler = method->compiled_entry();
+    original_interpreted_method_handler = method->interpreted_entry();
+
+    method->set_compiled_entry(reinterpret_cast<std::uint8_t*>(compiled_method_hook_handler));
+    method->set_interpreted_entry(reinterpret_cast<std::uint8_t*>(interpreted_method_hook_handler));
 
     while (!GetAsyncKeyState(VK_DELETE))
     {
