@@ -7,7 +7,6 @@ struct trap_frame_t
     std::uint64_t rcx;
     std::uint64_t rdx;
     std::uint64_t rbx;
-    std::uint64_t rsp;
     std::uint64_t rbp;
     std::uint64_t rsi;
     std::uint64_t rdi;

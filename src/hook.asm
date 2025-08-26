@@ -1,5 +1,5 @@
-extern original_compiled_method_handler : qword
 extern original_interpreted_method_handler : qword
+extern original_i2i_method_handler : qword
 extern method_detour : proc
 
 .code
@@ -39,37 +39,41 @@ extern method_detour : proc
 		mov r15, [rsp+112]
 	endm
 
-	compiled_method_hook_handler proc
+	generic_method_handler macro original_handler:req
+		pushfq
+
 		sub rsp, 78h
 		save_general_purpose_registers
 
 		mov rcx, rsp
-		mov rdx, original_compiled_method_handler
+		lea rdx, [rsp+80h]
 
 		sub rsp, 20h
 		call method_detour
 		add rsp, 20h
 
+		cmp al, 1
+
 		restore_general_purpose_registers
+
+		je jump_to_original_handler
+
 		add rsp, 78h
+		popfq
 
 		ret
-	compiled_method_hook_handler endp
+	jump_to_original_handler:
+		add rsp, 78h
+		popfq
+
+		jmp original_handler
+	endm
 
 	interpreted_method_hook_handler proc
-		sub rsp, 78h
-		save_general_purpose_registers
-
-		mov rcx, rsp
-		mov rdx, original_interpreted_method_handler
-
-		sub rsp, 20h
-		call method_detour
-		add rsp, 20h
-
-		restore_general_purpose_registers
-		add rsp, 78h
-
-		ret
+		generic_method_handler original_interpreted_method_handler
 	interpreted_method_hook_handler endp
+
+	i2i_method_hook_handler proc
+		generic_method_handler original_i2i_method_handler
+	i2i_method_hook_handler endp
 END
