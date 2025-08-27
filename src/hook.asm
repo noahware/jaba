@@ -45,8 +45,7 @@ extern method_detour : proc
 		sub rsp, 78h
 		save_general_purpose_registers
 
-		mov rcx, rsp
-		lea rdx, [rsp+80h]
+		lea rcx, [rsp+88h]
 
 		sub rsp, 20h
 		call method_detour
@@ -61,7 +60,13 @@ extern method_detour : proc
 		add rsp, 78h
 		popfq
 
-		ret
+		push rax
+		mov rax, [rsp]
+		mov [r13-8], rax
+		pop rax
+
+		mov rsp, r13
+		jmp qword ptr [rsp-8]
 	jump_to_original_handler:
 		add rsp, 78h
 		popfq

@@ -91,7 +91,7 @@ void do_call_skip()
     thread_list[std::this_thread::get_id()] = 0;
 }
 
-void call_method_original(const jobject current_object)
+void call_method_original(const jobject current_object, const jfloat yaw, const jfloat pitch)
 {
     skip_next_call();
 
@@ -99,7 +99,7 @@ void call_method_original(const jobject current_object)
 
     const jmethodID sample_method = java::get_sample_method();
 
-    env->CallVoidMethod(current_object, sample_method);
+    env->CallVoidMethod(current_object, sample_method, yaw, pitch);
 }
 
 class argument_parser_t
@@ -113,7 +113,7 @@ public:
 };
 
 // returns 1 == should jump to original method handler
-extern "C" std::uint8_t method_detour(trap_frame_t* const trap_frame, const std::uint64_t rsp)
+extern "C" std::uint8_t method_detour(argument_parser_t* const arguments)
 {
     if (should_skip_call())
     {
@@ -122,16 +122,25 @@ extern "C" std::uint8_t method_detour(trap_frame_t* const trap_frame, const std:
         return 1;
     }
 
-    const auto arguments = reinterpret_cast<argument_parser_t*>(rsp + 8);
-
+    jobject const current_object = arguments->get_argument<jobject>(2);
     jfloat const yaw = arguments->get_argument<jvalue*>(1)->f;
     jfloat const pitch = arguments->get_argument<jvalue*>(0)->f;
 
+    call_method_original(current_object, yaw, pitch);
+
     std::println("entity_t::set_angles was called ({},{})", yaw, pitch);
 
-    //call_method_original(current_object);
+    return 0;
+}
 
-    return 1;
+void recompile_method_class(const jmethodID method)
+{
+    jvmtiEnv* const env = java::get_jvmti_env();
+
+    jclass declaring_class = nullptr;
+
+    env->GetMethodDeclaringClass(method, &declaring_class);
+    env->RetransformClasses(1, &declaring_class);
 }
 
 DWORD __stdcall thread_entry(void* const module)
@@ -142,6 +151,8 @@ DWORD __stdcall thread_entry(void* const module)
     freopen_s(&console_stream, "CONOUT$", "w", stdout);
 
     const jmethodID sample_method = java::get_sample_method();
+
+    recompile_method_class(sample_method);
 
     method_t* const method = *reinterpret_cast<method_t**>(sample_method);
 
