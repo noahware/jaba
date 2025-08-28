@@ -77,3 +77,13 @@ protected:
 	std::uint8_t* interpreted_entry_ = nullptr;
 	std::uint8_t pad_six_[40] = { };
 };
+
+class argument_parser_t
+{
+public:
+	template <class t>
+	t get_argument(const std::uint64_t i)
+	{
+		return reinterpret_cast<t>(reinterpret_cast<void**>(this) + i);
+	}
+};

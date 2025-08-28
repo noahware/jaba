@@ -144,14 +144,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\hook.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\hook.hpp" />
     <ClInclude Include="src\jvm.hpp" />
-    <ClInclude Include="src\trap_frame.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="src\hook.asm" />
+    <MASM Include="src\hook_asm.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
