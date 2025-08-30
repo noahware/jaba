@@ -29,6 +29,9 @@
     <ClInclude Include="src\hook.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\trap_frame.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="src\hook_asm.asm">

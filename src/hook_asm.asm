@@ -63,18 +63,17 @@ public i2i_method_hook_handler
 
 		restore_general_purpose_registers
 
+		movq xmm0, rax
+
 		je jump_to_original_handler
 
 		add rsp, 80h
 		popfq
 
-		push rax
-		mov rax, [rsp+8]
-		mov [r13-8], rax
-		pop rax
-
+		mov rdi, [rsp]
 		mov rsp, r13
-		jmp qword ptr [rsp-8]
+
+		jmp rdi
 
 	jump_to_original_handler:
 		add rsp, 80h

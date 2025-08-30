@@ -1,18 +1,23 @@
 #include "hook.hpp"
 
+#include <memory>
+#include <print>
 #include <unordered_map>
+#include <Windows.h>
+
+#include "trap_frame.hpp"
 
 extern "C" void interpreted_method_hook_handler();
 extern "C" void i2i_method_hook_handler();
 
-namespace hook
+namespace
 {
     struct hook_t
     {
         std::uint8_t* original_interpreted_method_handler = nullptr;
         std::uint8_t* original_i2i_method_handler = nullptr;
 
-        handler_t handler = nullptr;
+        hook::handler_t handler = nullptr;
     };
 
     enum class method_entry_type_t : std::uint8_t
@@ -21,7 +26,7 @@ namespace hook
         i2i = 1
     };
 
-    std::unordered_map<method_t*, hook_t> hooks;
+    std::unordered_map<method_t*, hook_t> hook_list;
 }
 
 void recompile_method_class(JNIEnv* const env, jvmtiEnv* const jvmti_env, const jmethodID method)
@@ -46,13 +51,13 @@ void make_method_interpreted(JNIEnv* const env, jvmtiEnv* const jvmti_env, const
 
 void add_to_hook_list(method_t* const method, hook::handler_t const handler)
 {
-	hook::hook_t hook;
+	hook_t hook;
 
     hook.original_interpreted_method_handler = method->interpreted_entry();
     hook.original_i2i_method_handler = method->i2i_entry();
     hook.handler = handler;
 
-    hook::hooks[method] = hook;
+    hook_list[method] = std::move(hook);
 }
 
 void hook::add_hook(JNIEnv* const env, jvmtiEnv* const jvmti_env, const jmethodID method_id, handler_t const handler)
@@ -70,16 +75,16 @@ void hook::add_hook(JNIEnv* const env, jvmtiEnv* const jvmti_env, const jmethodI
     method->set_i2i_entry(i2i_hook_handler);
 
     method->set_no_inline();
-    method->set_access_flags(method->access_flags() | 0xE000000);
+    method->set_access_flags(method->access_flags() | 0xF000000);
 }
 
 void hook::remove_hook(const jmethodID method_id)
 {
     method_t* const method = *reinterpret_cast<method_t**>(method_id);
 
-    const auto& it = hooks.find(method);
+    const auto& it = hook_list.find(method);
 
-    if (it == hooks.end())
+    if (it == hook_list.end())
     {
         return;
     }
@@ -89,38 +94,77 @@ void hook::remove_hook(const jmethodID method_id)
     method->set_interpreted_entry(hook.original_interpreted_method_handler);
     method->set_i2i_entry(hook.original_i2i_method_handler);
 
-    hooks.erase(it);
+    hook_list.erase(it);
 }
 
-extern "C" std::uint64_t java_hook_method_detour(const std::uint64_t starting_rsp, method_t* const method, const hook::method_entry_type_t method_entry_type, std::uint8_t* const should_call_original)
+enum JavaThreadState
+{
+    _THREAD_Uninitialized = 0, // should never happen (missing initialization)
+    _THREAD_New = 2, // just starting up, i.e., in process of being initialized
+    _THREAD_NewTrans = 3, // corresponding transition state (not used, included for completness)
+    _THREAD_InNative = 4, // running in native code
+    _THREAD_InNativeTrans = 5, // corresponding transition state
+    _THREAD_InVm = 6, // running in VM
+    _THREAD_InVmrans = 7, // corresponding transition state
+    _THREAD_InJava = 8, // running in Java or in stub code
+    _THREAD_InJavaTrans = 9, // corresponding transition state (not used, included for completness)
+    _THREAD_Blocked = 10, // blocked in vm
+    _THREAD_BlockedTrans = 11, // corresponding transition state
+    _THREAD_MaxState = 12  // maximum THREAD state+1 - used for statistics allocation
+};
+
+struct java_frame_anchor_t
+{
+    std::uint8_t* last_stack_pointer;
+    std::uint8_t* last_program_counter;
+    std::uint8_t* last_frame_pointer;
+};
+
+extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method_t* const method, const method_entry_type_t method_entry_type, std::uint8_t* const should_call_original)
 {
     auto const arguments = reinterpret_cast<argument_parser_t*>(starting_rsp + 8);
     auto const original_handler = reinterpret_cast<std::uint8_t**>(starting_rsp - 16);
+    auto const trap_frame = reinterpret_cast<trap_frame_t*>(starting_rsp - 0x88);
 
-    const auto& it = hook::hooks.find(method);
+    const auto& it = hook_list.find(method);
 
-    if (it != hook::hooks.end())
+    if (it != hook_list.end())
     {
         const auto& hook = it->second;
 
         switch (method_entry_type)
         {
-        case hook::method_entry_type_t::interpreted:
+        case method_entry_type_t::interpreted:
         {
             *original_handler = hook.original_interpreted_method_handler;
             break;
         }
-        case hook::method_entry_type_t::i2i:
+        case method_entry_type_t::i2i:
         {
         	*original_handler = hook.original_i2i_method_handler;
         	break;
         }
         }
 
-        return hook.handler(arguments, should_call_original);
+        const std::uint64_t java_thread = trap_frame->r15;
+
+        constexpr std::uint64_t jni_environment_offset = 0x260;
+        constexpr std::uint64_t thread_state_offset = 0x2d8;
+
+        auto const thread_state = reinterpret_cast<std::int32_t*>(java_thread + thread_state_offset);
+
+    	const auto env = reinterpret_cast<JNIEnv*>(java_thread + jni_environment_offset);
+
+        const std::int32_t original_thread_state = *thread_state;
+
+        *thread_state = 4; // native thread state
+
+		trap_frame->rax = hook.handler(arguments, env, should_call_original);
+
+        *thread_state = original_thread_state;
+
+        return;
     }
 
     __debugbreak();
-
-    return 0;
 }
