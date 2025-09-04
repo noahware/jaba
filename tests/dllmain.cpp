@@ -3,7 +3,6 @@
 #include <print>
 
 #include "jni/jni.h"
-#include "jni/jvmti.h"
 
 #include "../src/hook.hpp"
 
@@ -65,14 +64,14 @@ DWORD __stdcall thread_entry(void* const module)
 
     const jmethodID sample_method = java::get_sample_method(env);
 
-    hook::add_hook(sample_method, set_angles_handler);
+    hook::jni::add_hook(sample_method, set_angles_handler);
 
 	while (!GetAsyncKeyState(VK_DELETE))
     {
         std::this_thread::sleep_for(std::chrono::microseconds(25));
     }
 
-    hook::remove_hook(sample_method);
+    hook::jni::remove_hook(sample_method);
 
     const HWND console_window = GetConsoleWindow();
 

@@ -51,10 +51,8 @@ void add_to_hook_list(method_t* const method, hook::handler_t const handler, std
     hook_list[method] = std::move(hook);
 }
 
-std::unique_ptr<method_t> make_method_copy(const jmethodID method_id)
+std::unique_ptr<method_t> make_method_copy(method_t* const original_method)
 {
-    method_t* const original_method = *reinterpret_cast<method_t**>(method_id);
-
     auto new_method = std::make_unique<method_t>(*original_method);
 
     new_method->set_vtable_index(-2);
@@ -62,13 +60,11 @@ std::unique_ptr<method_t> make_method_copy(const jmethodID method_id)
     return std::move(new_method);
 }
 
-void hook::add_hook(const jmethodID method_id, handler_t const handler)
+void hook::add_hook(method_t* const method, handler_t const handler)
 {
-    method_t* const method = *reinterpret_cast<method_t**>(method_id);
-
     make_method_interpreted(method);
 
-    std::unique_ptr<method_t> method_copy = make_method_copy(method_id);
+    std::unique_ptr<method_t> method_copy = make_method_copy(method);
 
     add_to_hook_list(method, handler, std::move(method_copy));
 
@@ -79,10 +75,8 @@ void hook::add_hook(const jmethodID method_id, handler_t const handler)
     method->set_i2i_entry(i2i_hook_handler);
 }
 
-void hook::remove_hook(const jmethodID method_id)
+void hook::remove_hook(method_t* const method)
 {
-    method_t* const method = *reinterpret_cast<method_t**>(method_id);
-
     const auto& it = hook_list.find(method);
 
     if (it == hook_list.end())
@@ -98,12 +92,21 @@ void hook::remove_hook(const jmethodID method_id)
     hook_list.erase(it);
 }
 
-struct java_frame_anchor_t
+#ifdef _JAVAHOOK_USE_JNI
+void hook::jni::add_hook(const jmethodID method_id, handler_t const handler)
 {
-    std::uint8_t* last_stack_pointer;
-    std::uint8_t* last_program_counter;
-    std::uint8_t* last_frame_pointer;
-};
+    method_t* const method = *reinterpret_cast<method_t**>(method_id);
+
+    hook::add_hook(method, handler);
+}
+
+void hook::jni::remove_hook(const jmethodID method_id)
+{
+    method_t* const method = *reinterpret_cast<method_t**>(method_id);
+
+    hook::remove_hook(method);
+}
+#endif
 
 extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method_t* const method, const method_entry_type_t method_entry_type, std::uint8_t* const should_call_original)
 {
@@ -133,12 +136,9 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
 
         const std::uint64_t java_thread = trap_frame->r15;
 
-        constexpr std::uint64_t jni_environment_offset = 504;
         constexpr std::uint64_t thread_state_offset = 624;
 
         auto const thread_state = reinterpret_cast<std::int32_t*>(java_thread + thread_state_offset);
-
-    	const auto env = reinterpret_cast<JNIEnv*>(java_thread + jni_environment_offset);
 
         const std::int32_t original_thread_state = *thread_state;
 
@@ -146,10 +146,18 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
 
         method_t* method_copy = hook.method_copy.get();
 
+#ifdef _JAVAHOOK_USE_JNI
+        constexpr std::uint64_t jni_environment_offset = 504;
+
+        const auto env = reinterpret_cast<JNIEnv*>(java_thread + jni_environment_offset);
+
         const auto method_copy_id = reinterpret_cast<jmethodID>(&method_copy);
 
 		trap_frame->rax = hook.handler(arguments, env, method_copy_id, should_call_original);
-    
+#else
+        trap_frame->rax = hook.handler(arguments, method_copy, should_call_original);
+#endif
+
         *thread_state = original_thread_state;
 
         return;
