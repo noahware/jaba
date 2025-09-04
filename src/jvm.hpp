@@ -23,10 +23,28 @@ namespace jvm
 	}\
 
 
+class adapter_handler_entry_t
+{
+public:
+	static std::uint64_t c2i_entry_offset;
+
+	JVM_FIELD_ACCESSORS(c2i_entry, std::uint8_t*)
+};
+
+class method_counters_t
+{
+public:
+	static std::uint64_t invocation_counter_offset;
+
+	JVM_FIELD_ACCESSORS(invocation_counter, std::uint32_t)
+};
+
+
+// 'marked' deoptimization is moved to CompiledMethod in later jdk versions
 class nmethod_t
 {
 public:
-	static std::uint64_t	marked_for_deoptimization_offset;
+	static std::uint64_t marked_for_deoptimization_offset;
 	static std::uint64_t state_offset;
 
 	enum state_t : std::uint8_t
@@ -38,7 +56,31 @@ public:
 	};
 
 	JVM_FIELD_ACCESSORS(marked_for_deoptimization, std::uint8_t)
-	JVM_FIELD_ACCESSORS(state, state_t)
+	JVM_FIELD_ACCESSORS(state, std::uint8_t)
+};
+
+class compiled_method_t
+{
+public:
+	static std::uint64_t mark_for_deoptimization_status_offset;
+
+	enum state_t : std::uint8_t
+	{
+		in_use = 0,
+		not_used = 1,
+		not_entrant = 2,
+		zombie = 3,
+		unloaded = 4
+	};
+
+	enum deoptimization_status_t : std::int32_t
+	{
+		not_marked,
+		deoptimize,
+		deoptimize_noupdate
+	};
+
+	JVM_FIELD_ACCESSORS(mark_for_deoptimization_status, deoptimization_status_t)
 };
 
 class method_t
@@ -48,11 +90,14 @@ public:
 
 	static std::uint64_t i2i_entry_offset;
 	static std::uint64_t from_interpreted_entry_offset;
+	static std::uint64_t from_compiled_entry_offset;
 	static std::uint64_t access_flags_offset;
 	static std::uint64_t intrinsic_id_offset;
 	static std::uint64_t flags_offset;
 	static std::uint64_t vtable_index_offset;
 	static std::uint64_t code_offset;
+	static std::uint64_t adapter_offset;
+	static std::uint64_t method_counters_offset;
 
 	struct flags_t
 	{
@@ -66,11 +111,14 @@ public:
 
 	JVM_FIELD_ACCESSORS(i2i_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(from_interpreted_entry, std::uint8_t*)
+	JVM_FIELD_ACCESSORS(from_compiled_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(access_flags, std::int32_t)
 	JVM_FIELD_ACCESSORS(intrinsic_id, std::int8_t)
 	JVM_FIELD_ACCESSORS(flags, flags_t)
 	JVM_FIELD_ACCESSORS(vtable_index, std::int32_t)
-	JVM_FIELD_ACCESSORS(code, nmethod_t*)
+	JVM_FIELD_ACCESSORS(code, void*)
+	JVM_FIELD_ACCESSORS(adapter, adapter_handler_entry_t*)
+	JVM_FIELD_ACCESSORS(method_counters, method_counters_t*)
 
 	void set_no_inline()
 	{
@@ -84,15 +132,51 @@ public:
 
 	void decompile()
 	{
-		nmethod_t* const nmethod = code();
+		const auto nmethod = static_cast<nmethod_t*>(code());
 
 		if (nmethod == nullptr)
 		{
 			return;
 		}
 
-		nmethod->set_marked_for_deoptimization(1);
-		nmethod->set_state(nmethod_t::state_t::not_entrant);
+		if (nmethod_t::marked_for_deoptimization_offset != 0)
+		{
+			nmethod->set_marked_for_deoptimization(1);
+			nmethod->set_state(nmethod_t::state_t::not_entrant);
+		}
+		else
+		{
+			const auto compiled_method = reinterpret_cast<compiled_method_t*>(nmethod);
+
+			compiled_method->set_mark_for_deoptimization_status(compiled_method_t::deoptimization_status_t::deoptimize);
+			nmethod->set_state(compiled_method_t::state_t::not_entrant);
+
+			const auto method_counter = method_counters();
+
+			method_counter->set_invocation_counter(0);
+		}
+
+		clear_code();
+	}
+
+	void clear_code()
+	{
+		adapter_handler_entry_t* const adapter_entry = adapter();
+
+		if (adapter_entry == nullptr)
+		{
+			set_from_compiled_entry(nullptr);
+		}
+		else
+		{
+			std::uint8_t* const c2i_entry = adapter_entry->c2i_entry();
+
+			set_from_compiled_entry(c2i_entry);
+		}
+
+		std::uint8_t* const new_from_interpreted_entry = i2i_entry();
+
+		set_from_interpreted_entry(new_from_interpreted_entry);
 
 		set_code(nullptr);
 	}
