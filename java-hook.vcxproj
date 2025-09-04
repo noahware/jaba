@@ -145,6 +145,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\hook.cpp" />
+    <ClCompile Include="src\jvm.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>

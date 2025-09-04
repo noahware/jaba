@@ -55,6 +55,8 @@ DWORD __stdcall thread_entry(void* const module)
 {
     java::set_up();
 
+    hook::set_up();
+
     AllocConsole();
 
     FILE* console_stream = nullptr;

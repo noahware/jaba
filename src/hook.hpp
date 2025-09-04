@@ -1,12 +1,10 @@
 #pragma once
 #include "jvm.hpp"
 
-#ifdef _JAVAHOOK_USE_JNI
-#include "../tests/jni/jni.h"
-#endif
-
 namespace hook
 {
+	void set_up();
+
 #ifdef _JAVAHOOK_USE_JNI
 	typedef std::uint64_t(*handler_t)(argument_parser_t* arguments, JNIEnv* env, jmethodID method_copy, std::uint8_t* should_call_original);
 

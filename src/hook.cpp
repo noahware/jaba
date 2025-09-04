@@ -3,7 +3,6 @@
 #include <memory>
 #include <print>
 #include <unordered_map>
-#include <Windows.h>
 
 #include "trap_frame.hpp"
 
@@ -19,7 +18,7 @@ namespace
 
         hook::handler_t handler = nullptr;
 
-        std::unique_ptr<method_t> method_copy;
+        std::unique_ptr<std::vector<std::uint8_t>> method_copy;
     };
 
     enum class method_entry_type_t : std::uint8_t
@@ -31,6 +30,11 @@ namespace
     std::unordered_map<method_t*, hook_t> hook_list;
 }
 
+void hook::set_up()
+{
+    jvm::set_up();
+}
+
 void make_method_interpreted(method_t* const method)
 {
     method->set_no_inline();
@@ -39,11 +43,11 @@ void make_method_interpreted(method_t* const method)
     method->decompile();
 }
 
-void add_to_hook_list(method_t* const method, hook::handler_t const handler, std::unique_ptr<method_t> method_copy)
+void add_to_hook_list(method_t* const method, hook::handler_t const handler, std::unique_ptr<std::vector<std::uint8_t>> method_copy)
 {
 	hook_t hook;
 
-    hook.original_interpreted_method_handler = method->interpreted_entry();
+    hook.original_interpreted_method_handler = method->from_interpreted_entry();
     hook.original_i2i_method_handler = method->i2i_entry();
     hook.handler = handler;
     hook.method_copy = std::move(method_copy);
@@ -51,27 +55,31 @@ void add_to_hook_list(method_t* const method, hook::handler_t const handler, std
     hook_list[method] = std::move(hook);
 }
 
-std::unique_ptr<method_t> make_method_copy(method_t* const original_method)
+std::unique_ptr<std::vector<std::uint8_t>> make_method_copy(method_t* const original_method)
 {
-    auto new_method = std::make_unique<method_t>(*original_method);
+    const auto buffer_start = reinterpret_cast<std::uint8_t*>(original_method);
+
+    auto new_method_buffer = std::make_unique<std::vector<std::uint8_t>>(buffer_start, buffer_start + method_t::class_size);
+
+    method_t* const new_method = reinterpret_cast<method_t*>(new_method_buffer->data());
 
     new_method->set_vtable_index(-2);
 
-    return std::move(new_method);
+    return std::move(new_method_buffer);
 }
 
 void hook::add_hook(method_t* const method, handler_t const handler)
 {
     make_method_interpreted(method);
 
-    std::unique_ptr<method_t> method_copy = make_method_copy(method);
+    std::unique_ptr<std::vector<std::uint8_t>> method_copy = make_method_copy(method);
 
     add_to_hook_list(method, handler, std::move(method_copy));
 
     auto const interpreted_hook_handler = reinterpret_cast<std::uint8_t*>(interpreted_method_hook_handler);
     auto const i2i_hook_handler = reinterpret_cast<std::uint8_t*>(i2i_method_hook_handler);
 
-    method->set_interpreted_entry(interpreted_hook_handler);
+    method->set_from_interpreted_entry(interpreted_hook_handler);
     method->set_i2i_entry(i2i_hook_handler);
 }
 
@@ -86,7 +94,7 @@ void hook::remove_hook(method_t* const method)
 
     const auto& hook = it->second;
 
-    method->set_interpreted_entry(hook.original_interpreted_method_handler);
+    method->set_from_interpreted_entry(hook.original_interpreted_method_handler);
     method->set_i2i_entry(hook.original_i2i_method_handler);
 
     hook_list.erase(it);
@@ -134,22 +142,16 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
         }
         }
 
-        const std::uint64_t java_thread = trap_frame->r15;
+        java_thread_t* const java_thread = reinterpret_cast<java_thread_t*>(trap_frame->r15);
 
-        constexpr std::uint64_t thread_state_offset = 624;
+        const java_thread_t::state_t original_thread_state = java_thread->state();
 
-        auto const thread_state = reinterpret_cast<std::int32_t*>(java_thread + thread_state_offset);
+        java_thread->set_state(java_thread_t::state_t::thread_in_native);
 
-        const std::int32_t original_thread_state = *thread_state;
-
-        *thread_state = 4; // native thread state
-
-        method_t* method_copy = hook.method_copy.get();
+        auto method_copy = reinterpret_cast<method_t*>(hook.method_copy->data());
 
 #ifdef _JAVAHOOK_USE_JNI
-        constexpr std::uint64_t jni_environment_offset = 504;
-
-        const auto env = reinterpret_cast<JNIEnv*>(java_thread + jni_environment_offset);
+        JNIEnv* const env = java_thread->jni_environment();
 
         const auto method_copy_id = reinterpret_cast<jmethodID>(&method_copy);
 
@@ -158,7 +160,7 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
         trap_frame->rax = hook.handler(arguments, method_copy, should_call_original);
 #endif
 
-        *thread_state = original_thread_state;
+        java_thread->set_state(original_thread_state);
 
         return;
     }
