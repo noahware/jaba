@@ -28,25 +28,6 @@ namespace java
         return env;
     }
 
-    jvmtiEnv* get_jvmti_env()
-    {
-        jvmtiEnv* env = nullptr;
-
-        if (virtual_machine->GetEnv(reinterpret_cast<void**>(&env), JVMTI_VERSION_1_2) != JNI_OK)
-        {
-            return nullptr;
-        }
-
-        constexpr jvmtiCapabilities capabilities = { .can_retransform_classes = JVMTI_ENABLE };
-
-        if (env->AddCapabilities(&capabilities) != JVMTI_ERROR_NONE)
-        {
-            return nullptr;
-        }
-
-        return env;
-    }
-
     jmethodID get_sample_method(JNIEnv* const env)
     {
         const jclass entity = env->FindClass("pk");
@@ -56,12 +37,15 @@ namespace java
     }
 }
 
-std::uint64_t set_angles_handler(argument_parser_t* const arguments, JNIEnv* const env, std::uint8_t* const should_call_original)
+std::uint64_t set_angles_handler(argument_parser_t* const arguments, JNIEnv* const env, const jmethodID method_copy, std::uint8_t* const should_call_original)
 {
-    *should_call_original = 1;
+    *should_call_original = 0;
 
+    const jobject current_object = arguments->get_argument<jobject>(2);
     const jfloat yaw = arguments->get_argument<jvalue*>(1)->f;
     const jfloat pitch = arguments->get_argument<jvalue*>(0)->f;
+
+    env->CallVoidMethod(current_object, method_copy, yaw, pitch);
 
     std::println("entity_t::set_angles was called ({},{})", yaw, pitch);
 
@@ -79,11 +63,9 @@ DWORD __stdcall thread_entry(void* const module)
 
     JNIEnv* const env = java::get_env();
 
-    jvmtiEnv* const ti = java::get_jvmti_env();
-
     const jmethodID sample_method = java::get_sample_method(env);
 
-    hook::add_hook(env, ti, sample_method, set_angles_handler);
+    hook::add_hook(sample_method, set_angles_handler);
 
 	while (!GetAsyncKeyState(VK_DELETE))
     {

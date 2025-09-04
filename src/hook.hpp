@@ -6,10 +6,9 @@
 
 namespace hook
 {
-	typedef std::uint64_t(*handler_t)(argument_parser_t* arguments, JNIEnv* env, std::uint8_t* should_call_original);
+	typedef std::uint64_t(*handler_t)(argument_parser_t* arguments, JNIEnv* env, jmethodID method_copy, std::uint8_t* should_call_original);
 
-	// jvmti_env must have ability to retransform classes
-	void add_hook(JNIEnv* env, jvmtiEnv* jvmti_env, jmethodID method_id, handler_t handler);
+	void add_hook(jmethodID method_id, handler_t handler);
 
 	void remove_hook(jmethodID method_id);
 }

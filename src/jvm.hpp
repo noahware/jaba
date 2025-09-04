@@ -6,6 +6,43 @@ struct const_method_t
 	
 };
 
+class nmethod_t
+{
+public:
+	enum state_t : std::uint8_t
+	{
+		in_use = 0,
+		not_entrant = 1,
+		zombie = 2,
+		unloaded = 3
+	};
+
+	[[nodiscard]] std::uint8_t marked_for_decompilation() const
+	{
+		return marked_for_decompilation_;
+	}
+
+	void set_marked_for_decompilation(const std::uint8_t marked_for_decompilation)
+	{
+		marked_for_decompilation_ = marked_for_decompilation;
+	}
+
+	[[nodiscard]] state_t state() const
+	{
+		return state_;
+	}
+
+	void set_state(const state_t state)
+	{
+		state_ = state;
+	}
+
+protected:
+	std::uint8_t pad_one_[0xD6] = { };
+	std::uint8_t marked_for_decompilation_;
+	state_t state_ = { };
+};
+
 class method_t
 {
 public:
@@ -55,6 +92,46 @@ public:
 		force_inline_ = 0;
 	}
 
+	[[nodiscard]] std::int32_t vtable_index() const
+	{
+		return vtable_index_;
+	}
+
+	void set_vtable_index(std::int32_t const vtable_index)
+	{
+		vtable_index_ = vtable_index;
+	}
+
+	[[nodiscard]] const_method_t* const_method() const
+	{
+		return const_method_;
+	}
+
+	[[nodiscard]] nmethod_t* code() const
+	{
+		return code_;
+	}
+
+	void set_code(nmethod_t* const code)
+	{
+		code_ = code;
+	}
+
+	void decompile()
+	{
+		nmethod_t* const nmethod = code();
+
+		if (nmethod == nullptr)
+		{
+			return;
+		}
+
+		nmethod->set_marked_for_decompilation(1);
+		nmethod->set_state(nmethod_t::state_t::not_entrant);
+
+		set_code(nullptr);
+	}
+
 protected:
 	std::uint8_t pad_one_[8] = { };
 	const_method_t* const_method_ = nullptr;
@@ -73,9 +150,9 @@ protected:
 	std::uint8_t* i2i_entry_ = nullptr;
 	std::uint8_t pad_four_[8] = { };
 	std::uint8_t* compiled_entry_ = nullptr;
-	std::uint8_t pad_five_[8] = { };
+	nmethod_t* code_ = nullptr;
 	std::uint8_t* interpreted_entry_ = nullptr;
-	std::uint8_t pad_six_[40] = { };
+	std::uint8_t pad_five_[40] = { };
 };
 
 class argument_parser_t
