@@ -45,7 +45,7 @@ void make_method_interpreted(method_t* const method)
 
 void add_to_hook_list(method_t* const method, hook::handler_t const handler, std::unique_ptr<std::vector<std::uint8_t>> method_copy)
 {
-	hook_t hook;
+    hook_t hook;
 
     hook.original_interpreted_method_handler = method->from_interpreted_entry();
     hook.original_i2i_method_handler = method->i2i_entry();
@@ -137,8 +137,8 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
         }
         case method_entry_type_t::i2i:
         {
-        	*original_handler = hook.original_i2i_method_handler;
-        	break;
+            *original_handler = hook.original_i2i_method_handler;
+            break;
         }
         }
 
@@ -155,7 +155,7 @@ extern "C" void java_hook_method_detour(const std::uint64_t starting_rsp, method
 
         const auto method_copy_id = reinterpret_cast<jmethodID>(&method_copy);
 
-		trap_frame->rax = hook.handler(arguments, env, method_copy_id, should_call_original);
+        trap_frame->rax = hook.handler(arguments, env, method_copy_id, should_call_original);
 #else
         trap_frame->rax = hook.handler(arguments, method_copy, should_call_original);
 #endif

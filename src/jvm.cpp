@@ -2,9 +2,13 @@
 
 #include <print>
 
-std::uint64_t adapter_handler_entry_t::c2i_entry_offset = 0;
-
 std::uint64_t method_counters_t::invocation_counter_offset = 0;
+std::uint64_t method_counters_t::backedge_counter_offset = 0;
+
+std::uint64_t method_data_t::invocation_counter_offset = 0;
+std::uint64_t method_data_t::backedge_counter_offset = 0;
+std::uint64_t method_data_t::arg_stack_offset = 0;
+std::uint64_t method_data_t::arg_returned_offset = 0;
 
 std::uint64_t nmethod_t::marked_for_deoptimization_offset = 0;
 std::uint64_t nmethod_t::state_offset = 0;
@@ -20,8 +24,8 @@ std::uint64_t method_t::intrinsic_id_offset = 0;
 std::uint64_t method_t::flags_offset = 0;
 std::uint64_t method_t::vtable_index_offset = 0;
 std::uint64_t method_t::code_offset = 0;
-std::uint64_t method_t::adapter_offset = 0;
 std::uint64_t method_t::method_counters_offset = 0;
+std::uint64_t method_t::method_data_offset = 0;
 
 std::uint64_t java_thread_t::state_offset = 0;
 #ifdef _JAVAHOOK_USE_JNI
@@ -109,18 +113,23 @@ void jvm::set_up()
 	method_t::from_compiled_entry_offset = get_vm_struct_entry_offset(method, "_from_compiled_entry");
 	method_t::access_flags_offset = get_vm_struct_entry_offset(method, "_access_flags");
 	method_t::intrinsic_id_offset = get_vm_struct_entry_offset(method, "_intrinsic_id");
-	method_t::flags_offset = method_t::intrinsic_id_offset + 1;
+	method_t::flags_offset = get_vm_struct_entry_offset(method, "_flags");
 	method_t::vtable_index_offset = get_vm_struct_entry_offset(method, "_vtable_index");
 	method_t::code_offset = get_vm_struct_entry_offset(method, "_code");
-	method_t::adapter_offset = get_vm_struct_entry_offset(method, "_adapter");
 	method_t::method_counters_offset = get_vm_struct_entry_offset(method, "_method_counters");
+	method_t::method_data_offset = get_vm_struct_entry_offset(method, "_method_data");
+
+	if (!method_t::flags_offset)
+	{
+		method_t::flags_offset = method_t::intrinsic_id_offset + 1;
+	}
 
 	constexpr std::string_view nmethod = "nmethod";
 
 	nmethod_t::marked_for_deoptimization_offset = get_vm_struct_entry_offset(nmethod, "_marked_for_deoptimization");
 	nmethod_t::state_offset = get_vm_struct_entry_offset(nmethod, "_state");
 
-	if (nmethod_t::marked_for_deoptimization_offset == 0) // if is later jdk version
+	if (!nmethod_t::marked_for_deoptimization_offset) // if is later jdk version
 	{
 		constexpr std::string_view code_blob = "CodeBlob";
 
@@ -131,8 +140,15 @@ void jvm::set_up()
 	constexpr std::string_view method_counters = "MethodCounters";
 
 	method_counters_t::invocation_counter_offset = get_vm_struct_entry_offset(method_counters, "_invocation_counter");
+	method_counters_t::backedge_counter_offset = get_vm_struct_entry_offset(method_counters, "_backedge_counter");
 
-	constexpr std::string_view adapter_handler_entry = "AdapterHandlerEntry";
+	constexpr std::string_view method_data = "MethodData";
 
-	adapter_handler_entry_t::c2i_entry_offset = get_vm_struct_entry_offset(adapter_handler_entry, "_c2i_entry");
+	method_data_t::arg_stack_offset = get_vm_struct_entry_offset(method_data, "_arg_stack");
+	method_data_t::arg_returned_offset = get_vm_struct_entry_offset(method_data, "_arg_returned");
+
+	const std::uint64_t intx_size = method_data_t::arg_returned_offset - method_data_t::arg_stack_offset;
+
+	method_data_t::invocation_counter_offset = method_data_t::arg_returned_offset + intx_size + sizeof(std::int32_t);
+	method_data_t::backedge_counter_offset = method_data_t::invocation_counter_offset + sizeof(std::uint32_t);
 }

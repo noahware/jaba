@@ -54,7 +54,6 @@ std::uint64_t set_angles_handler(argument_parser_t* const arguments, JNIEnv* con
 DWORD __stdcall thread_entry(void* const module)
 {
     java::set_up();
-
     hook::set_up();
 
     AllocConsole();

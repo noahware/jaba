@@ -22,23 +22,27 @@ namespace jvm
 		*reinterpret_cast<type*>(reinterpret_cast<std::uint8_t*>(this) + field_name##_offset) = __new_##field_name;\
 	}\
 
-
-class adapter_handler_entry_t
-{
-public:
-	static std::uint64_t c2i_entry_offset;
-
-	JVM_FIELD_ACCESSORS(c2i_entry, std::uint8_t*)
-};
-
 class method_counters_t
 {
 public:
 	static std::uint64_t invocation_counter_offset;
+	static std::uint64_t backedge_counter_offset;
 
 	JVM_FIELD_ACCESSORS(invocation_counter, std::uint32_t)
+	JVM_FIELD_ACCESSORS(backedge_counter, std::uint32_t)
 };
 
+class method_data_t
+{
+public:
+	static std::uint64_t invocation_counter_offset;
+	static std::uint64_t backedge_counter_offset;
+	static std::uint64_t arg_stack_offset;
+	static std::uint64_t arg_returned_offset;
+
+	JVM_FIELD_ACCESSORS(invocation_counter, std::uint32_t)
+	JVM_FIELD_ACCESSORS(backedge_counter, std::uint32_t)
+};
 
 // 'marked' deoptimization is moved to CompiledMethod in later jdk versions
 class nmethod_t
@@ -96,36 +100,61 @@ public:
 	static std::uint64_t flags_offset;
 	static std::uint64_t vtable_index_offset;
 	static std::uint64_t code_offset;
-	static std::uint64_t adapter_offset;
 	static std::uint64_t method_counters_offset;
-
-	struct flags_t
-	{
-		std::uint8_t jfr_towrite : 1;
-		std::uint8_t caller_sensitive : 1;
-		std::uint8_t force_inline : 1;
-		std::uint8_t hidden : 1;
-		std::uint8_t dont_inline : 1;
-		std::uint8_t : 3;
-	};
+	static std::uint64_t method_data_offset;
 
 	JVM_FIELD_ACCESSORS(i2i_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(from_interpreted_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(from_compiled_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(access_flags, std::int32_t)
 	JVM_FIELD_ACCESSORS(intrinsic_id, std::int8_t)
-	JVM_FIELD_ACCESSORS(flags, flags_t)
+	JVM_FIELD_ACCESSORS(flags, std::uint16_t)
 	JVM_FIELD_ACCESSORS(vtable_index, std::int32_t)
 	JVM_FIELD_ACCESSORS(code, void*)
-	JVM_FIELD_ACCESSORS(adapter, adapter_handler_entry_t*)
 	JVM_FIELD_ACCESSORS(method_counters, method_counters_t*)
+	JVM_FIELD_ACCESSORS(method_data, method_data_t*)
 
 	void set_no_inline()
 	{
-		flags_t method_flags = flags();
+		std::uint16_t method_flags = flags();
 
-		method_flags.dont_inline = 1;
-		method_flags.force_inline = 0;
+		// todo: endianness fix here
+		if (nmethod_t::marked_for_deoptimization_offset != 0) // <= jdk8
+		{
+			struct flags_t
+			{
+				std::uint8_t jfr_towrite : 1;
+				std::uint8_t caller_sensitive : 1;
+				std::uint8_t force_inline : 1;
+				std::uint8_t hidden : 1;
+				std::uint8_t dont_inline : 1;
+				std::uint8_t : 3;
+			};
+
+			const auto flags_ptr = reinterpret_cast<flags_t*>(&method_flags);
+
+			flags_ptr->dont_inline = 1;
+			flags_ptr->force_inline = 0;
+		}
+		else
+		{
+			struct flags_t
+			{
+				std::uint8_t caller_sensitive : 1;
+				std::uint8_t force_inline : 1;
+				std::uint8_t dont_inline : 1;
+				std::uint8_t hidden : 1;
+				std::uint8_t has_injected_profile : 1;
+				std::uint8_t intrinsic_candidate : 1;
+				std::uint8_t reserved_stack_access : 1;
+				std::uint8_t scoped : 1;
+			};
+
+			const auto flags_ptr = reinterpret_cast<flags_t*>(&method_flags);
+
+			flags_ptr->dont_inline = 1;
+			flags_ptr->force_inline = 0;
+		}
 
 		set_flags(method_flags);
 	}
@@ -139,7 +168,7 @@ public:
 			return;
 		}
 
-		if (nmethod_t::marked_for_deoptimization_offset != 0)
+		if (nmethod_t::marked_for_deoptimization_offset != 0) // <= jdk8
 		{
 			nmethod->set_marked_for_deoptimization(1);
 			nmethod->set_state(nmethod_t::state_t::not_entrant);
@@ -148,32 +177,35 @@ public:
 		{
 			const auto compiled_method = reinterpret_cast<compiled_method_t*>(nmethod);
 
-			compiled_method->set_mark_for_deoptimization_status(compiled_method_t::deoptimization_status_t::deoptimize);
 			nmethod->set_state(compiled_method_t::state_t::not_entrant);
-
-			const auto method_counter = method_counters();
-
-			method_counter->set_invocation_counter(0);
+			compiled_method->set_mark_for_deoptimization_status(compiled_method_t::deoptimization_status_t::deoptimize);
 		}
 
+		reset_counters();
 		clear_code();
+	}
+
+	void reset_counters() const
+	{
+		const auto method_counter = method_counters();
+
+		if (method_counter)
+		{
+			method_counter->set_invocation_counter(0);
+			method_counter->set_backedge_counter(0);
+		}
+
+		const auto data = method_data();
+
+		if (data)
+		{
+			data->set_invocation_counter(0);
+			data->set_backedge_counter(0);
+		}
 	}
 
 	void clear_code()
 	{
-		adapter_handler_entry_t* const adapter_entry = adapter();
-
-		if (adapter_entry == nullptr)
-		{
-			set_from_compiled_entry(nullptr);
-		}
-		else
-		{
-			std::uint8_t* const c2i_entry = adapter_entry->c2i_entry();
-
-			set_from_compiled_entry(c2i_entry);
-		}
-
 		std::uint8_t* const new_from_interpreted_entry = i2i_entry();
 
 		set_from_interpreted_entry(new_from_interpreted_entry);
