@@ -1,7 +1,5 @@
 extern java_hook_method_detour : proc
-
-public interpreted_method_hook_handler
-public i2i_method_hook_handler
+extern ?native_entry@abstract_interpreter_t@@2PEAEEA : qword
 
 .code
 	save_general_purpose_registers macro
@@ -40,53 +38,23 @@ public i2i_method_hook_handler
 		mov r15, [rsp+112]
 	endm
 
-	; method hook type 0 = interpreted, method hook type 1 = i2i
-	generic_method_handler macro method_entry_type:req
+	generic_method_handler proc
 		pushfq
 
-		sub rsp, 80h ; 78h for trap frame, 8h for original handler if needed
+		sub rsp, 78h
 		save_general_purpose_registers
 
-		lea rcx, [rsp+88h] ; starting_rsp
-		mov rdx, rbx ; method
-		mov r8, method_entry_type
-
-		push rdx
-		lea r9, [rsp] ; should_call_original
+		mov rcx, rsp ; trap frame
 
 		sub rsp, 20h
 		call java_hook_method_detour
 		add rsp, 20h
 
-		cmp byte ptr [rsp], 1
-		pop rdx
-
 		restore_general_purpose_registers
+		add rsp, 78h
 
-		movq xmm0, rax
-
-		je jump_to_original_handler
-
-		add rsp, 80h
 		popfq
-
-		mov rdi, [rsp]
-		mov rsp, r13
-
-		jmp rdi
-
-	jump_to_original_handler:
-		add rsp, 80h
-		popfq
-
-		jmp qword ptr [rsp-16]
-	endm
-
-	interpreted_method_hook_handler proc
-		generic_method_handler 0
-	interpreted_method_hook_handler endp
-
-	i2i_method_hook_handler proc
-		generic_method_handler 1
-	i2i_method_hook_handler endp
+	
+		jmp ?native_entry@abstract_interpreter_t@@2PEAEEA
+	generic_method_handler endp
 END

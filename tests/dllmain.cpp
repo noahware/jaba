@@ -27,7 +27,7 @@ namespace java
         return env;
     }
 
-    jmethodID get_sample_method(JNIEnv* const env)
+    jmethodID get_set_angles_method(JNIEnv* const env)
     {
         const jclass entity = env->FindClass("pk");
         const jmethodID set_angles_method = env->GetMethodID(entity, "c", "(FF)V");
@@ -36,43 +36,53 @@ namespace java
     }
 }
 
-std::uint64_t set_angles_handler(argument_parser_t* const arguments, JNIEnv* const env, const jmethodID method_copy, std::uint8_t* const should_call_original)
+void set_angles_handler(JNIEnv* const env, const jobject current_object, const jfloat yaw, const jfloat pitch)
 {
-    *should_call_original = 0;
+    const jmethodID set_angles_method = java::get_set_angles_method(env);
 
-    const jobject current_object = arguments->get_argument<jobject>(2);
-    const jfloat yaw = arguments->get_argument<jvalue*>(1)->f;
-    const jfloat pitch = arguments->get_argument<jvalue*>(0)->f;
+    method_t* callable_method = hook::jni::get_callable_method(set_angles_method);
+    const auto callable_method_id = reinterpret_cast<jmethodID>(&callable_method);
 
-    env->CallVoidMethod(current_object, method_copy, yaw, pitch);
+    env->CallVoidMethod(current_object, callable_method_id, yaw, pitch);
 
-    std::println("entity_t::set_angles was called ({},{})", yaw, pitch);
+    std::println("set angles");
+}
 
-    return 0;
+// <base of code offset, size of code>
+std::pair<std::uint32_t, std::uint32_t> get_module_code_info(std::uint8_t* const module_base)
+{
+    const auto dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(module_base);
+    const auto nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(module_base + dos_header->e_lfanew);
+
+    return std::make_pair(nt_headers->OptionalHeader.BaseOfCode, nt_headers->OptionalHeader.SizeOfCode);
 }
 
 DWORD __stdcall thread_entry(void* const module)
 {
-    java::set_up();
-    hook::set_up();
-
     AllocConsole();
 
     FILE* console_stream = nullptr;
     freopen_s(&console_stream, "CONOUT$", "w", stdout);
 
+    std::uint8_t* const jvm_base = reinterpret_cast<std::uint8_t*>(GetModuleHandleA("jvm.dll"));
+
+    const auto module_code_info = get_module_code_info(jvm_base);
+
+    java::set_up();
+    hook::set_up(jvm_base + module_code_info.first, module_code_info.second);
+
     JNIEnv* const env = java::get_env();
 
-    const jmethodID sample_method = java::get_sample_method(env);
+    const jmethodID set_angles_method = java::get_set_angles_method(env);
 
-    hook::jni::add_hook(sample_method, set_angles_handler);
+    hook::jni::add_hook(set_angles_method, reinterpret_cast<void*>(&set_angles_handler));
 
 	while (!GetAsyncKeyState(VK_DELETE))
     {
         std::this_thread::sleep_for(std::chrono::microseconds(25));
     }
 
-    hook::jni::remove_hook(sample_method);
+    hook::jni::remove_hook(set_angles_method);
 
     const HWND console_window = GetConsoleWindow();
 

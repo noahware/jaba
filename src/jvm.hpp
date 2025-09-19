@@ -2,13 +2,17 @@
 #include <string_view>
 #include <cstdint>
 
+#include <print>
+
 #ifdef _JAVAHOOK_USE_JNI
 #include "../tests/jni/jni.h"
 #endif
 
+class method_t;
+
 namespace jvm
 {
-	void set_up();
+	void set_up(std::uint8_t* jvm_code_base, std::uint64_t jvm_code_size);
 }
 
 #define JVM_FIELD_ACCESSORS(field_name, type)\
@@ -22,26 +26,37 @@ namespace jvm
 		*reinterpret_cast<type*>(reinterpret_cast<std::uint8_t*>(this) + field_name##_offset) = __new_##field_name;\
 	}\
 
-class method_counters_t
+
+class code_cache_t
 {
 public:
-	static std::uint64_t invocation_counter_offset;
-	static std::uint64_t backedge_counter_offset;
+	typedef void(*make_marked_nmethods_non_entrant_t)();
+	typedef void(*mark_all_nmethods_for_deoptimization_t)();
+	typedef void(*mark_all_nmethods_for_evol_deoptimization_t)();
 
-	JVM_FIELD_ACCESSORS(invocation_counter, std::uint32_t)
-	JVM_FIELD_ACCESSORS(backedge_counter, std::uint32_t)
+	static make_marked_nmethods_non_entrant_t make_marked_nmethods_non_entrant;
+	static mark_all_nmethods_for_deoptimization_t mark_all_nmethods_for_deoptimization;
+	static mark_all_nmethods_for_evol_deoptimization_t mark_all_nmethods_for_evol_deoptimization;
+
+	static void deoptimize_method(method_t* method);
 };
 
-class method_data_t
+class abstract_interpreter_t
 {
 public:
-	static std::uint64_t invocation_counter_offset;
-	static std::uint64_t backedge_counter_offset;
-	static std::uint64_t arg_stack_offset;
-	static std::uint64_t arg_returned_offset;
+	static std::uint8_t* slow_signature_handler;
 
-	JVM_FIELD_ACCESSORS(invocation_counter, std::uint32_t)
-	JVM_FIELD_ACCESSORS(backedge_counter, std::uint32_t)
+	typedef uint8_t*(*method_entry_table_t)[];
+
+	static method_entry_table_t method_entry_table;
+	static std::uint8_t* native_entry;
+
+	static void set_native_entry()
+	{
+		constexpr std::uint64_t native_method_entry = 2;
+
+		native_entry = (*method_entry_table)[native_method_entry];
+	}
 };
 
 // 'marked' deoptimization is moved to CompiledMethod in later jdk versions
@@ -49,6 +64,7 @@ class nmethod_t
 {
 public:
 	static std::uint64_t marked_for_deoptimization_offset;
+	static std::uint64_t compilation_level_offset;
 	static std::uint64_t state_offset;
 
 	enum state_t : std::uint8_t
@@ -60,6 +76,7 @@ public:
 	};
 
 	JVM_FIELD_ACCESSORS(marked_for_deoptimization, std::uint8_t)
+	JVM_FIELD_ACCESSORS(compilation_level, std::int32_t)
 	JVM_FIELD_ACCESSORS(state, std::uint8_t)
 };
 
@@ -100,8 +117,6 @@ public:
 	static std::uint64_t flags_offset;
 	static std::uint64_t vtable_index_offset;
 	static std::uint64_t code_offset;
-	static std::uint64_t method_counters_offset;
-	static std::uint64_t method_data_offset;
 
 	JVM_FIELD_ACCESSORS(i2i_entry, std::uint8_t*)
 	JVM_FIELD_ACCESSORS(from_interpreted_entry, std::uint8_t*)
@@ -111,8 +126,6 @@ public:
 	JVM_FIELD_ACCESSORS(flags, std::uint16_t)
 	JVM_FIELD_ACCESSORS(vtable_index, std::int32_t)
 	JVM_FIELD_ACCESSORS(code, void*)
-	JVM_FIELD_ACCESSORS(method_counters, method_counters_t*)
-	JVM_FIELD_ACCESSORS(method_data, method_data_t*)
 
 	void set_no_inline()
 	{
@@ -159,92 +172,36 @@ public:
 		set_flags(method_flags);
 	}
 
-	void decompile()
+	bool is_compiled()
 	{
 		const auto nmethod = static_cast<nmethod_t*>(code());
 
 		if (nmethod == nullptr)
 		{
-			return;
+			return false;
 		}
 
-		if (nmethod_t::marked_for_deoptimization_offset != 0) // <= jdk8
-		{
-			nmethod->set_marked_for_deoptimization(1);
-			nmethod->set_state(nmethod_t::state_t::not_entrant);
-		}
-		else
-		{
-			const auto compiled_method = reinterpret_cast<compiled_method_t*>(nmethod);
-
-			nmethod->set_state(compiled_method_t::state_t::not_entrant);
-			compiled_method->set_mark_for_deoptimization_status(compiled_method_t::deoptimization_status_t::deoptimize);
-		}
-
-		reset_counters();
-		clear_code();
+		return nmethod->compilation_level() != 0;
 	}
 
-	void reset_counters() const
+	void decompile()
 	{
-		const auto method_counter = method_counters();
-
-		if (method_counter)
-		{
-			method_counter->set_invocation_counter(0);
-			method_counter->set_backedge_counter(0);
-		}
-
-		const auto data = method_data();
-
-		if (data)
-		{
-			data->set_invocation_counter(0);
-			data->set_backedge_counter(0);
-		}
+		code_cache_t::deoptimize_method(this);
 	}
 
-	void clear_code()
+	void disable_compilation()
 	{
-		std::uint8_t* const new_from_interpreted_entry = i2i_entry();
+		const auto current_access_flags = access_flags();
 
-		set_from_interpreted_entry(new_from_interpreted_entry);
-
-		set_code(nullptr);
+		set_access_flags(current_access_flags | 0xE000000);
 	}
-};
 
-class java_thread_t
-{
-public:
-	enum state_t : std::int32_t
+	void make_native()
 	{
-		thread_uninitialized = 0,
-		thread_new = 2,
-		thread_new_trans = 3,
-		thread_in_native = 4,
-		thread_in_native_trans = 5,
-		thread_in_vm = 6,
-		thread_in_vm_trans = 7,
-		thread_in_java = 8,
-		thread_in_java_trans = 9,
-		thread_blocked = 10,
-		thread_blocked_trans = 11,
-		thread_max_state = 12
-	};
+		const auto current_access_flags = access_flags();
 
-	static std::uint64_t state_offset;
-#ifdef _JAVAHOOK_USE_JNI
-	static std::uint64_t anchor_offset;
-	static std::uint64_t jni_environment_offset;
-
-	JNIEnv* jni_environment()
-	{
-		return reinterpret_cast<JNIEnv*>(reinterpret_cast<std::uint8_t*>(this) + jni_environment_offset);
+		set_access_flags(current_access_flags | 0x100);
 	}
-#endif
-
-	JVM_FIELD_ACCESSORS(state, state_t)
 };
 
 class argument_parser_t
