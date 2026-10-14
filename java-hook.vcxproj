@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="src\hook.cpp" />
     <ClCompile Include="src\jvm\jvm.cpp" />
+    <ClCompile Include="src\jvm\vm_struct.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
     <ClCompile Include="tests\util\log.cpp" />
   </ItemGroup>

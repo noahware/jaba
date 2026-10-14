@@ -5,6 +5,8 @@
 class vm_struct_entry
 {
 public:
+	static vm_struct_entry* find(std::string_view type_name, std::string_view field_name) noexcept;
+
 	[[nodiscard]] std::string_view type_name() const noexcept
 	{
 		return type_name_;
@@ -47,32 +49,34 @@ protected:
 class vm_type_entry
 {
 public:
-	[[nodiscard]] std::string_view type_name() const
+	static vm_type_entry* find(std::string_view type_name) noexcept;
+
+	[[nodiscard]] std::string_view type_name() const noexcept
 	{
 		return type_name_;
 	}
 
-	[[nodiscard]] std::string_view class_name() const
+	[[nodiscard]] std::string_view class_name() const noexcept
 	{
 		return super_class_name_;
 	}
 
-	[[nodiscard]] bool is_oop_type() const
+	[[nodiscard]] bool is_oop_type() const noexcept
 	{
 		return is_oop_type_;
 	}
 
-	[[nodiscard]] bool is_integer_type() const
+	[[nodiscard]] bool is_integer_type() const noexcept
 	{
 		return is_integer_type_;
 	}
 
-	[[nodiscard]] bool is_unsigned() const
+	[[nodiscard]] bool is_unsigned() const noexcept
 	{
 		return is_unsigned_;
 	}
 
-	[[nodiscard]] std::uint64_t size() const
+	[[nodiscard]] std::size_t size() const noexcept
 	{
 		return size_;
 	}
