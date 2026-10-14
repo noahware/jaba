@@ -1,25 +1,22 @@
 #include <Windows.h>
 
-BOOL APIENTRY DllMain( HMODULE const module,
-                       const DWORD reason_for_call,
-                       LPVOID const reserved
-                     )
+namespace
 {
-    switch (reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    {
-        DisableThreadLibraryCalls(module);
+	void thread_entry(const HMODULE mod)
+	{
+        FreeLibraryAndExitThread(mod, 0);
+	}
+}
 
-        CreateThread(nullptr, 0, thread_entry, module, 0, nullptr);
+BOOL APIENTRY DllMain(const HMODULE mod, const DWORD reason, [[maybe_unused]] const LPVOID reserved)
+{
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        DisableThreadLibraryCalls(mod);
 
-        break;
+        CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(thread_entry), mod, 0, nullptr);
     }
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
+
     return TRUE;
 }
 
