@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -144,19 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\hook.cpp" />
-    <ClCompile Include="src\jvm.cpp" />
-    <ClCompile Include="src\signature.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\hook.hpp" />
-    <ClInclude Include="src\jvm.hpp" />
-    <ClInclude Include="src\signature.hpp" />
-    <ClInclude Include="src\trap_frame.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="src\hook_asm.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
