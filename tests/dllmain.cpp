@@ -2,7 +2,7 @@
 
 namespace
 {
-	void thread_entry(const HMODULE mod)
+	[[noreturn]] void thread_entry(const HMODULE mod)
 	{
         FreeLibraryAndExitThread(mod, 0);
 	}
