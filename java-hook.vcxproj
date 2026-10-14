@@ -149,6 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="tests\dllmain.cpp" />
+    <ClCompile Include="tests\util\log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests\util\image.hpp" />

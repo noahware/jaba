@@ -6,9 +6,13 @@ namespace
 {
 	[[noreturn]] void thread_entry(const HMODULE mod)
 	{
+        util::log::init();
+
         pe::image* const jvm = util::find_img("jvm.dll");
 
         LOG("jvm {}, size {}", jvm->as<std::uintptr_t>(), jvm->size());
+
+        util::log::reset();
 
         FreeLibraryAndExitThread(mod, 0);
 	}
