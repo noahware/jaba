@@ -10,7 +10,7 @@
 *.userosscache
 *.sln.docstates
 
-tests/jni/
+vendor/jni/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

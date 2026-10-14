@@ -1,5 +1,5 @@
 #pragma once
-#include "../jni/jni.h"
+#include <jni/jni.h>
 #include <string>
 
 namespace java

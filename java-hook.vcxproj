@@ -71,6 +71,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)src\;$(SolutionDir)vendor\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)src\;$(SolutionDir)vendor\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)vendor\pe\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -122,7 +128,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)tests\jni\jvm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)vendor\jni\jvm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,14 +150,19 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(ProjectDir)tests\jni\jvm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)vendor\jni\jvm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\hook.cpp" />
+    <ClCompile Include="src\jvm\jvm.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
     <ClCompile Include="tests\util\log.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\hook.hpp" />
+    <ClInclude Include="src\jvm\jvm.hpp" />
+    <ClInclude Include="src\jvm\vm_struct.hpp" />
     <ClInclude Include="tests\java\java.hpp" />
     <ClInclude Include="tests\util\image.hpp" />
     <ClInclude Include="tests\util\log.hpp" />
