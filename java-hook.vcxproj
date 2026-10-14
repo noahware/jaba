@@ -152,6 +152,7 @@
     <ClCompile Include="tests\util\log.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="tests\java\java.hpp" />
     <ClInclude Include="tests\util\image.hpp" />
     <ClInclude Include="tests\util\log.hpp" />
   </ItemGroup>
