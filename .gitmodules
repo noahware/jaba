@@ -1,0 +1,3 @@
+[submodule "vendor/pe"]
+	path = vendor/pe
+	url = https://github.com/noahware/pe
