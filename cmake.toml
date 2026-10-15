@@ -1,0 +1,25 @@
+[cmake]
+version = "3.15"
+cmkr-include = "cmake/cmkr.cmake"
+
+[project]
+name = "jaba"
+languages = ["CXX", "ASM_MASM"]
+
+[target.jaba]
+type = "shared"
+sources = [
+    "src/**.cpp",
+    "src/**.hpp",
+    "src/hook/jaba_hk_stub.asm",
+    "tests/**.cpp",
+    "tests/**.hpp",
+]
+include-directories = [
+    "src",
+    "tests",
+    "vendor",
+    "vendor/pe/include",
+]
+compile-features = ["cxx_std_23"]
+link-libraries = ["${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"]
