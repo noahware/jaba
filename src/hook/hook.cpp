@@ -79,6 +79,7 @@ namespace
 }
 
 #ifdef JABA_MHK_USE_JVMTI
+// todo: retransform classes will wipe other hooks in same class, fix that
 std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method_detour_t detour, jvmtiEnv* const tinv)
 {
 	return raw_hook_method(jmethod, detour,
