@@ -30,7 +30,14 @@ namespace
         pe::image* const jvm = util::find_img("jvm.dll");
         LOG("jvm {}, size {}", jvm->as<std::uintptr_t>(), jvm->size());
 
-        jaba::init(jvm);
+        if (!jaba::init(java::env()))
+        {
+            LOG("failed to init jaba");
+
+            util::log::reset();
+
+            FreeLibraryAndExitThread(mod, 0);
+        }
 
         jvmtiEnv* const jvmti = java::tinv();
 

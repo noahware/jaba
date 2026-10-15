@@ -4,8 +4,8 @@
 
 namespace jaba
 {
-	inline void init(const pe::image* const jvm)
+	[[nodiscard]] inline bool init(JNIEnv* const env)
 	{
-		abstract_interpreter::init(jvm);
+		return abstract_interpreter::init(env);
 	}
 }

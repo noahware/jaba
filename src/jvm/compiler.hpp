@@ -1,28 +1,27 @@
 #pragma once
-#include "../util/scan.hpp"
+#include <cstdint>
+#include <jni/jni.h>
+
+#include "method.hpp"
 
 namespace jaba
 {
 	class abstract_interpreter
 	{
 	public:
-		static bool init(const pe::image* const jvm)
+		static bool init(JNIEnv* const env)
 		{
-			constexpr std::size_t native_method_kind = 2;
+			const jclass object = env->FindClass("java/lang/Object");
+			const jmethodID hash_code = object ? env->GetMethodID(object, "hashCode", "()I") : nullptr;
 
-			const auto slow_sig_slot = util::scan_rel<std::uint8_t**>(jvm, "48 8B 15 ? ? ? ? E9 ? ? ? ? 48 8B 15 ? ? ? ? E8", 3, 7);
-			const auto method_entry_table = util::scan_rel<std::uint8_t**>(jvm, "48 8D 0D ? ? ? ? 48 89 14 C1", 3, 7);
-
-			if (!slow_sig_slot || !method_entry_table)
+			if (!hash_code)
 				return false;
 
-			slow_sig_handler = *slow_sig_slot;
-			native_entry = method_entry_table[native_method_kind];
+			native_entry = static_cast<std::uint8_t*>(method::from(hash_code)->i2i_entry());
 
-			return slow_sig_handler && native_entry;
+			return native_entry;
 		}
 
-		inline static std::uint8_t* slow_sig_handler = nullptr;
 		static std::uint8_t* native_entry;
 	};
 }

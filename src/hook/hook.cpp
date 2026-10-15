@@ -35,10 +35,9 @@ namespace
 		auto& buf = native_method.buf();
 
 		const auto detour_ref = reinterpret_cast<const std::uint8_t*>(&detour);
-		const auto ssh_ref = reinterpret_cast<const std::uint8_t*>(&abstract_interpreter::slow_sig_handler);
 
 		buf.insert(buf.end(), detour_ref, detour_ref + sizeof(std::uintptr_t));
-		buf.insert(buf.end(), ssh_ref, ssh_ref + sizeof(std::uintptr_t));
+		buf.insert(buf.end(), sizeof(std::uintptr_t), 0);
 
 		return native_method;
 	}
