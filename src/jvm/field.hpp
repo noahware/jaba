@@ -12,7 +12,7 @@
 			return; \
 		const auto vmf = jaba::vm_struct_entry::find(name, #field_name); \
         if (!vmf) \
-			throw std::runtime_error(std::format("unable to find {}!{}", #clazz_name, #field_name)); \
+			throw std::runtime_error(std::format("unable to find {}!{}", name.view(), #field_name)); \
 		display_name##_offset = vmf->offset(); \
 	} \
     [[nodiscard]] type display_name() const { \
