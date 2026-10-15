@@ -48,6 +48,16 @@ namespace jaba
             return reinterpret_cast<const T*>(buf_.data());
         }
 
+        [[nodiscard]] std::vector<std::uint8_t>& buf() noexcept
+        {
+            return buf_;
+        }
+
+        [[nodiscard]] const std::vector<std::uint8_t>& buf() const noexcept
+        {
+            return buf_;
+        }
+
     protected:
         std::vector<std::uint8_t> buf_;
     };
@@ -56,14 +66,14 @@ namespace jaba
     class jvm_type
     {
     public:
-        static constexpr auto name = Name;
+        static constexpr fixed_string name = Name;
 
         [[nodiscard]] std::size_t size() const
         {
             const vm_type_entry* const vmt = vm_type_entry::find(name);
         	
         	if (!vmt)
-				throw std::runtime_error(std::format("unable to find {}", name));
+				throw std::runtime_error(std::format("unable to find {}", name.view()));
 
             return vmt->size();
         }
