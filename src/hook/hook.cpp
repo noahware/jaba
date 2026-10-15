@@ -3,7 +3,9 @@
 
 #include "jvm/method.hpp"
 
-namespace jaba
+using namespace jaba;
+
+namespace
 {
 	/*struct hook
 	{
@@ -27,15 +29,16 @@ namespace jaba
 
 		return native_method;
 	}
+}
 
-	void hook_method(const jmethodID jmethod, const method_detour_t detour)
-	{
-		method* const orig_method = method::from(jmethod);
+void jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
+{
+	method* const orig_method = method::from(jmethod);
 
-	}
 
-	void unhook_method(jmethodID jmethod)
-	{
+}
 
-	}
+void jaba::unhook_method(jmethodID jmethod)
+{
+
 }
