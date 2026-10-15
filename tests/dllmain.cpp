@@ -39,17 +39,6 @@ namespace
             FreeLibraryAndExitThread(mod, 0);
         }
 
-        jvmtiEnv* const jvmti = java::tinv();
-
-        if (!jvmti)
-        {
-            LOG("failed to create jvmti");
-
-            util::log::reset();
-
-            FreeLibraryAndExitThread(mod, 0);
-        }
-
         const auto set_angles = set_angles_method();
 
         orig_set_angles = jaba::hook_method(set_angles, set_angles_detour).value_or(nullptr);

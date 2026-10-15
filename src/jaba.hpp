@@ -11,7 +11,10 @@ namespace jaba
 		if (!abstract_interpreter::init(env))
 			return false;
 
-#ifndef JABA_MHK_USE_JVMTI
+#ifdef JABA_MHK_USE_JVMTI
+		if (!init_jvmti(env))
+			return false;
+#else
 		if (!deopt::init(env, jvm))
 			return false;
 #endif
