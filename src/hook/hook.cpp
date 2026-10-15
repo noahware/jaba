@@ -11,7 +11,7 @@ extern "C" void jaba_hk_stub();
 
 namespace
 {
-	using make_interp_fn = std::function<bool(method*)>;
+	using recompile_method_fn = std::function<bool(method*)>;
 
 	struct hook
 	{
@@ -44,14 +44,14 @@ namespace
 	}
 
 	std::optional<jmethodID> raw_hook_method(const jmethodID jmethod, const method_detour_t detour,
-	                                         const make_interp_fn& make_interp)
+	                                         const recompile_method_fn& recompile_method)
 	{
 		method* const orig_method = method::from(jmethod);
 
 		if (hooks.contains(orig_method))
 			return { };
 
-		if (!make_interp(orig_method))
+		if (!recompile_method(orig_method))
 			return { };
 
 		std::unique_lock lock(hooks_mtx);
@@ -59,6 +59,8 @@ namespace
 		// under the lock
 		if (hooks.contains(orig_method))
 			return { };
+
+		
 
 		jvm_type_copy<method> native_method = make_native_handler(orig_method, detour);
 
