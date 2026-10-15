@@ -7,7 +7,6 @@
 #include <format>
 #include "vm_struct.hpp"
 
-
 #define JABA_JVM_FIELD_IMPL(display_name, type, resolve_offset) \
     static inline std::optional<std::ptrdiff_t> display_name##_offset = std::nullopt; \
 	static void find_##display_name##_off() { \
