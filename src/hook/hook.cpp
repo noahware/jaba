@@ -26,10 +26,6 @@ namespace
 	std::shared_mutex hooks_mtx;
 	std::unordered_map<method*, hook> hooks;
 
-#ifdef JABA_MHK_USE_JVMTI
-	jvmtiEnv* tinv = nullptr;
-#endif
-
 	jvm_type_copy<method> make_native_handler(const method* const m, const method_detour_t detour)
 	{
 		jvm_type_copy<method> native_method = m->copy<method>();
@@ -92,46 +88,6 @@ namespace
 	}
 }
 
-#ifdef JABA_MHK_USE_JVMTI
-bool jaba::init_jvmti(JNIEnv* const env)
-{
-	JavaVM* vm = nullptr;
-
-	if (env->GetJavaVM(&vm) != JNI_OK)
-		return false;
-
-	if (vm->GetEnv(reinterpret_cast<void**>(&tinv), JVMTI_VERSION_1_2) != JNI_OK)
-		return false;
-
-	jvmtiCapabilities caps = { };
-	caps.can_retransform_classes = 1;
-
-	return tinv->AddCapabilities(&caps) == JVMTI_ERROR_NONE;
-}
-
-// todo: retransform classes will wipe other hooks in same class, fix that
-std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
-{
-	return raw_hook_method(jmethod, detour,
-		[](method* jvm_method) -> bool
-		{
-			const auto method = reinterpret_cast<jmethodID>(&jvm_method);
-
-			jclass clazz = nullptr;
-
-			if (tinv->GetMethodDeclaringClass(method, &clazz) != JVMTI_ERROR_NONE)
-				return false;
-			
-			constexpr jint clazz_count = 1;
-
-			if (tinv->RetransformClasses(clazz_count, &clazz) != JVMTI_ERROR_NONE)
-				return false;
-
-			return true;
-		}
-	);
-}
-#else
 std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
 {
 	return raw_hook_method(jmethod, detour,
@@ -147,7 +103,6 @@ std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method
 		}
 	);
 }
-#endif
 
 bool jaba::unhook_method(const jmethodID jmethod)
 {
