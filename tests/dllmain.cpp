@@ -32,11 +32,27 @@ namespace
 
         jaba::init(jvm);
 
+        jvmtiEnv* const jvmti = java::tinv();
+
+        if (!jvmti)
+        {
+            LOG("failed to create jvmti");
+
+            util::log::reset();
+
+            FreeLibraryAndExitThread(mod, 0);
+        }
+
         const auto set_angles = set_angles_method();
 
-        orig_set_angles = jaba::hook_method(set_angles, set_angles_detour, ).value_or();
+        orig_set_angles = jaba::hook_method(set_angles, set_angles_detour, jvmti).value_or(nullptr);
+
+        if (!orig_set_angles)
+            LOG("failed to hook set angles");
 
         Sleep(3000);
+
+        jaba::unhook_method(set_angles);
 
         util::log::reset();
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <jni/jni.h>
+#include <jni/jvmti.h>
 #include <string>
 
 namespace java
@@ -21,6 +22,29 @@ namespace java
         }
 
         return e;
+    }
+
+	[[nodiscard]] inline jvmtiEnv* tinv()
+    {
+        static jvmtiEnv* const t = []() -> jvmtiEnv*
+        {
+            static_cast<void>(env());
+
+            jvmtiEnv* e = nullptr;
+
+            if (vm->GetEnv(reinterpret_cast<void**>(&e), JVMTI_VERSION_1_2) != JNI_OK)
+                return nullptr;
+
+            jvmtiCapabilities caps = { };
+            caps.can_retransform_classes = 1;
+
+            if (e->AddCapabilities(&caps) != JVMTI_ERROR_NONE)
+                return nullptr;
+
+            return e;
+        }();
+
+        return t;
     }
 
     // when are we getting null terminated guaranteed string views...
