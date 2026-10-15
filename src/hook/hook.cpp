@@ -5,6 +5,8 @@
 
 using namespace jaba;
 
+extern "C" void jaba_hk_stub();
+
 namespace
 {
 	struct hook
@@ -76,4 +78,16 @@ bool jaba::unhook_method(const jmethodID jmethod)
 	hooks.erase(it);
 
 	return true;
+}
+
+extern "C" void jaba_hook_c_handler(method** method)
+{
+	const auto it = hooks.find(*method);
+
+	if (it != hooks.end())
+	{
+		auto& hk = it->second;
+
+		*method = hk.native_method.data();
+	}
 }

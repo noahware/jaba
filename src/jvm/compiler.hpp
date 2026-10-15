@@ -23,6 +23,6 @@ namespace jaba
 		}
 
 		inline static std::uint8_t* slow_sig_handler = nullptr;
-		inline static std::uint8_t* native_entry = nullptr;
+		static std::uint8_t* native_entry;
 	};
 }
