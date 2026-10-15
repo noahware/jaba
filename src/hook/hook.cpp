@@ -48,12 +48,16 @@ namespace
 	{
 		method* const orig_method = method::from(jmethod);
 
-		std::unique_lock lock(hooks_mtx);
-
 		if (hooks.contains(orig_method))
 			return { };
 
 		if (!make_interp(orig_method))
+			return { };
+
+		std::unique_lock lock(hooks_mtx);
+
+		// under the lock
+		if (hooks.contains(orig_method))
 			return { };
 
 		jvm_type_copy<method> native_method = make_native_handler(orig_method, detour);
