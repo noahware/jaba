@@ -18,7 +18,7 @@
     <ClCompile Include="tests\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\hook.cpp">
+    <ClCompile Include="src\hook\hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\jvm\jvm.cpp">
@@ -32,7 +32,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\hook.hpp">
+    <ClInclude Include="src\hook\hook.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\jvm\field.hpp">
@@ -57,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\jvm\type.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jvm\compiler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -154,15 +154,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\hook.cpp" />
+    <ClCompile Include="src\hook\hook.cpp" />
     <ClCompile Include="src\jvm\jvm.cpp" />
     <ClCompile Include="src\jvm\vm_struct.cpp" />
     <ClCompile Include="tests\dllmain.cpp" />
     <ClCompile Include="tests\util\log.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\hook.hpp" />
+    <ClInclude Include="src\hook\hook.hpp" />
+    <ClInclude Include="src\jvm\compiler.hpp" />
+    <ClInclude Include="src\jvm\field.hpp" />
     <ClInclude Include="src\jvm\jvm.hpp" />
+    <ClInclude Include="src\jvm\method.hpp" />
+    <ClInclude Include="src\jvm\type.hpp" />
     <ClInclude Include="src\jvm\vm_struct.hpp" />
     <ClInclude Include="tests\java\java.hpp" />
     <ClInclude Include="tests\util\image.hpp" />
