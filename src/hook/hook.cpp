@@ -51,6 +51,9 @@ namespace
 		if (hooks.contains(orig_method))
 			return { };
 
+		orig_method->make_no_inline();
+		orig_method->make_interpreted();
+
 		if (!recompile_method(orig_method))
 			return { };
 
@@ -59,8 +62,6 @@ namespace
 		// under the lock
 		if (hooks.contains(orig_method))
 			return { };
-
-		
 
 		jvm_type_copy<method> native_method = make_native_handler(orig_method, detour);
 
