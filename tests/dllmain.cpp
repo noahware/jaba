@@ -1,14 +1,26 @@
 #include <Windows.h>
+
+#include "jaba.hpp"
+#include "hook/hook.hpp"
 #include "java/java.hpp"
 #include "util/image.hpp"
 #include "util/log.hpp"
 
 namespace
 {
+    jmethodID orig_set_angles = nullptr;
+
 	[[nodiscard]] jmethodID set_angles_method()
 	{
         return java::find_method("pk", "c", "(FF)V");
 	}
+
+    void set_angles_detour(JNIEnv* const env, const jobject obj, const jfloat yaw, const jfloat pitch)
+    {
+        env->CallVoidMethod(obj, orig_set_angles, yaw, pitch);
+
+        LOG("set angles called {} {}", yaw, pitch);
+    }
 
 	[[noreturn]] void thread_entry(const HMODULE mod)
 	{
@@ -18,7 +30,11 @@ namespace
         pe::image* const jvm = util::find_img("jvm.dll");
         LOG("jvm {}, size {}", jvm->as<std::uintptr_t>(), jvm->size());
 
+        jaba::init(jvm);
+
         const auto set_angles = set_angles_method();
+
+        orig_set_angles = jaba::hook_method(set_angles, set_angles_detour, ).value_or();
 
         Sleep(3000);
 
