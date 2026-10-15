@@ -2,8 +2,6 @@
 #include <optional>
 #include <jni/jni.h>
 
-#define JABA_MHK_USE_JVMTI
-
 #ifdef JABA_MHK_USE_JVMTI
 #include <jni/jvmti.h>
 #endif

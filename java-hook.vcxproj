@@ -164,6 +164,7 @@
     <ClInclude Include="src\hook\hook.hpp" />
     <ClInclude Include="src\jaba.hpp" />
     <ClInclude Include="src\jvm\compiler.hpp" />
+    <ClInclude Include="src\jvm\deopt.hpp" />
     <ClInclude Include="src\jvm\field.hpp" />
     <ClInclude Include="src\jvm\method.hpp" />
     <ClInclude Include="src\jvm\type.hpp" />

@@ -1,5 +1,6 @@
 #include "hook.hpp"
 #include "jvm/compiler.hpp"
+#include "jvm/deopt.hpp"
 #include "jvm/method.hpp"
 #include <unordered_map>
 #include <functional>
@@ -111,9 +112,20 @@ std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method
 	);
 }
 #else
-std::optional<jmethodID> hook_method(const jmethodID jmethod, const method_detour_t detour)
+std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
 {
-	
+	return raw_hook_method(jmethod, detour,
+		[](method* const m) -> bool
+		{
+			m->make_no_inline();
+			m->make_interpreted();
+
+			if (m->code())
+				deopt::run();
+
+			return true;
+		}
+	);
 }
 #endif
 
