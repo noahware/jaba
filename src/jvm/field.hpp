@@ -5,12 +5,12 @@
 #include <format>
 #include "vm_struct.hpp"
 
-#define JABA_JVM_FIELD(clazz_name, field_name, display_name, type) \
+#define JABA_JVM_FIELD(field_name, display_name, type) \
     static inline std::optional<std::ptrdiff_t> display_name##_offset = std::nullopt; \
 	static void find_##display_name##_off() { \
 		if (display_name##_offset)\
 			return; \
-		const auto vmf = jaba::vm_struct_entry::find(#clazz_name, #field_name); \
+		const auto vmf = jaba::vm_struct_entry::find(name, #field_name); \
         if (!vmf) \
 			throw std::runtime_error(std::format("unable to find {}!{}", #clazz_name, #field_name)); \
 		display_name##_offset = vmf->offset(); \

@@ -84,8 +84,8 @@ namespace jaba
 		}
 
 	protected:
-		const char* type_name_;
-		const char* super_class_name_;
+		const char* type_name_ = nullptr;
+		const char* super_class_name_ = nullptr;
 		std::int32_t is_oop_type_ = 0;
 		std::int32_t is_integer_type_ = 0;
 		std::int32_t is_unsigned_ = 0;
