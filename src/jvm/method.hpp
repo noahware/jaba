@@ -28,6 +28,8 @@ namespace jaba
 		JABA_JVM_FIELD(_code, code, nmethod*)
 		JABA_JVM_FIELD(_vtable_index, vtable_idx, std::int32_t)
 		JABA_JVM_FIELD(_access_flags, acc_flags, access_flags)
+		JABA_JVM_FIELD(_from_interpreted_entry, from_interp_entry, void*)
+		JABA_JVM_FIELD(_i2i_entry, i2i_entry, void*)
 
 		void make_native()
 		{
