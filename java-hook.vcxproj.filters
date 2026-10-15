@@ -62,6 +62,9 @@
     <ClInclude Include="src\jvm\version.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\jaba.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="src\hook\jaba_hk_stub.asm">

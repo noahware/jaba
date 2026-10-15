@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\hook\hook.hpp" />
+    <ClInclude Include="src\jaba.hpp" />
     <ClInclude Include="src\jvm\compiler.hpp" />
     <ClInclude Include="src\jvm\field.hpp" />
     <ClInclude Include="src\jvm\method.hpp" />
