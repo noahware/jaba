@@ -46,16 +46,23 @@ namespace
 	std::optional<jmethodID> raw_hook_method(const jmethodID jmethod, const method_detour_t detour,
 	                                         const recompile_method_fn& recompile_method)
 	{
-		method* const orig_method = method::from(jmethod);
+		method* orig_method = method::from(jmethod);
 
-		if (hooks.contains(orig_method))
-			return { };
+		{
+			std::shared_lock lock(hooks_mtx);
 
-		orig_method->make_no_inline();
-		orig_method->make_interpreted();
+			if (hooks.contains(orig_method))
+				return { };
+		}
 
 		if (!recompile_method(orig_method))
 			return { };
+
+		// the recompile can replace the method object, so the old pointer is stale
+		orig_method = method::from(jmethod);
+
+		orig_method->make_no_inline();
+		orig_method->make_interpreted();
 
 		std::unique_lock lock(hooks_mtx);
 

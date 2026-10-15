@@ -53,7 +53,7 @@ namespace jaba
 		JABA_JVM_FIELD(_access_flags, acc_flags, access_flags)
 		JABA_JVM_FIELD(_from_interpreted_entry, from_interp_entry, void*)
 		JABA_JVM_FIELD(_i2i_entry, i2i_entry, void*)
-		JABA_JVM_FIELD_OR(_flags, flags, std::uint16_t, field_offset("_intrinsic_id") + 1)
+		JABA_JVM_FIELD_OR(_flags, flags, std::uint8_t, field_offset("_intrinsic_id") + 1)
 
 		void make_native()
 		{
@@ -75,7 +75,7 @@ namespace jaba
 
 		void make_no_inline()
 		{
-			std::uint16_t raw_flags = flags();
+			std::uint8_t raw_flags = flags();
 
 			if (pre_jdk9())
 			{
