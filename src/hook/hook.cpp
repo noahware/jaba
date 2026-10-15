@@ -53,6 +53,9 @@ bool jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
 
 	hooks[orig_method] = std::move(hk);
 
+	orig_method->set_from_interp_entry(jaba_hk_stub);
+	orig_method->set_i2i_entry(jaba_hk_stub);
+
 	return true;
 }
 

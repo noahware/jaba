@@ -172,6 +172,9 @@
     <ClInclude Include="tests\util\image.hpp" />
     <ClInclude Include="tests\util\log.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="src\hook\jaba_hk_stub.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
