@@ -5,24 +5,24 @@
 #include <format>
 #include "vm_struct.hpp"
 
-#define JABA_JVM_FIELD(clazz_name, field_name, type) \
-    static inline std::optional<std::ptrdiff_t> field_name##_offset = std::nullopt; \
-	static void find_##field_name##_off() { \
-		if (field_name##_offset)\
+#define JABA_JVM_FIELD(clazz_name, field_name, display_name, type) \
+    static inline std::optional<std::ptrdiff_t> display_name##_offset = std::nullopt; \
+	static void find_##display_name##_off() { \
+		if (display_name##_offset)\
 			return; \
 		const auto vmf = jaba::vm_struct_entry::find(#clazz_name, #field_name); \
         if (!vmf) \
 			throw std::runtime_error(std::format("unable to find {}!{}", #clazz_name, #field_name)); \
-		field_name##_offset = vmf->offset(); \
+		display_name##_offset = vmf->offset(); \
 	} \
-    [[nodiscard]] type field_name() const { \
-		find_##field_name##_off(); \
+    [[nodiscard]] type display_name() const { \
+		find_##display_name##_off(); \
         return *reinterpret_cast<type*>( \
             reinterpret_cast<std::uint8_t*>(const_cast<void*>( \
-                static_cast<const void*>(this))) + *field_name##_offset); \
+                static_cast<const void*>(this))) + *display_name##_offset); \
     } \
-    void set_##field_name(type v) { \
-		find_##field_name##_off(); \
+    void set_##display_name(type v) { \
+		find_##display_name##_off(); \
         *reinterpret_cast<type*>( \
-            reinterpret_cast<std::uint8_t*>(this) + *field_name##_offset) = v; \
+            reinterpret_cast<std::uint8_t*>(this) + *display_name##_offset) = v; \
     }
