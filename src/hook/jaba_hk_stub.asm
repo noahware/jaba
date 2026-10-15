@@ -8,31 +8,33 @@ extern ?native_entry@abstract_interpreter@jaba@@2PEAEEA : qword
 		push rax
 		push rcx
 		push rdx
-		push rbp
-		push rsi
-		push rdi
 		push r8
 		push r9
 		push r10
 		push r11
-		push r12
-		push r13
-		push r14
-		push r15
+
+		sub rsp, 60h
+		movdqu xmmword ptr [rsp], xmm0
+		movdqu xmmword ptr [rsp+10h], xmm1
+		movdqu xmmword ptr [rsp+20h], xmm2
+		movdqu xmmword ptr [rsp+30h], xmm3
+		movdqu xmmword ptr [rsp+40h], xmm4
+		movdqu xmmword ptr [rsp+50h], xmm5
 	endm
 
 	pop_most_regs macro
-		pop r15
-		pop r14
-		pop r13
-		pop r12
+		movdqu xmm5, xmmword ptr [rsp+50h]
+		movdqu xmm4, xmmword ptr [rsp+40h]
+		movdqu xmm3, xmmword ptr [rsp+30h]
+		movdqu xmm2, xmmword ptr [rsp+20h]
+		movdqu xmm1, xmmword ptr [rsp+10h]
+		movdqu xmm0, xmmword ptr [rsp]
+		add rsp, 60h
+
 		pop r11
 		pop r10
 		pop r9
 		pop r8
-		pop rdi
-		pop rsi
-		pop rbp
 		pop rdx
 		pop rcx
 		pop rax
@@ -42,6 +44,7 @@ extern ?native_entry@abstract_interpreter@jaba@@2PEAEEA : qword
 	jaba_hk_stub proc
 		push_most_regs
 
+		push rbp
 		push rbx
 		mov rcx, rsp ; now rcx holds ref to rbx (method ptr)
 
@@ -53,6 +56,7 @@ extern ?native_entry@abstract_interpreter@jaba@@2PEAEEA : qword
 
 		mov rsp, rbp
 		pop rbx ; write whatever the C handler wrote method ptr to
+		pop rbp
 
 		pop_most_regs
 
