@@ -78,6 +78,25 @@ namespace jaba
     public:
         static constexpr fixed_string name = Name;
 
+        [[nodiscard]] static std::ptrdiff_t field_offset(const std::string_view field_name)
+        {
+            const auto vmf = vm_struct_entry::find(name, field_name);
+
+            if (!vmf)
+                throw std::runtime_error(std::format("unable to find {}!{}", name.view(), field_name));
+
+            return static_cast<std::ptrdiff_t>(vmf->offset());
+        }
+
+        template <class FallbackT>
+        [[nodiscard]] static std::ptrdiff_t field_offset_or(const std::string_view field_name, FallbackT&& fallback)
+        {
+            if (const auto vmf = vm_struct_entry::find(name, field_name))
+                return static_cast<std::ptrdiff_t>(vmf->offset());
+
+            return fallback();
+        }
+
         [[nodiscard]] std::size_t size() const
         {
             const vm_type_entry* const vmt = vm_type_entry::find(name);
