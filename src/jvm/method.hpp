@@ -2,6 +2,7 @@
 #include "field.hpp"
 #include "type.hpp"
 #include "version.hpp"
+#include <jni/jni.h>
 
 namespace jaba
 {
@@ -39,6 +40,7 @@ namespace jaba
 		enum access_flags : std::uint32_t
 		{
 			af_native = 0x100,
+			af_interpreted = 0xE000000,
 		};
 
 		static method* from(const jmethodID id) noexcept
@@ -58,6 +60,15 @@ namespace jaba
 			std::uint32_t af = acc_flags();
 
 			af |= af_native;
+
+			set_acc_flags(static_cast<access_flags>(af));
+		}
+
+		void make_interpreted()
+		{
+			std::uint32_t af = acc_flags();
+
+			af |= af_interpreted;
 
 			set_acc_flags(static_cast<access_flags>(af));
 		}
