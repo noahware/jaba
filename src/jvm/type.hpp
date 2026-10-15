@@ -38,12 +38,22 @@ namespace jaba
         explicit jvm_type_copy(std::vector<std::uint8_t> buf)
 	        :   buf_(std::move(buf)) { }
 
-        T* operator->() noexcept
+        [[nodiscard]] T* operator->() noexcept
         {
             return reinterpret_cast<T*>(buf_.data());
         }
 
-        const T* operator->() const noexcept
+        [[nodiscard]] const T* operator->() const noexcept
+        {
+            return reinterpret_cast<const T*>(buf_.data());
+        }
+
+        [[nodiscard]] T* data() noexcept
+        {
+            return reinterpret_cast<T*>(buf_.data());
+        }
+
+        [[nodiscard]] const T* data() const noexcept
         {
             return reinterpret_cast<const T*>(buf_.data());
         }
