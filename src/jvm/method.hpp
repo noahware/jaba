@@ -6,9 +6,10 @@
 
 namespace jaba
 {
-	class nmethod
+	class nmethod : public jvm_type<"nmethod">
 	{
-		
+	public:
+
 	};
 
 	class method : public jvm_type<"Method">
