@@ -11,16 +11,25 @@ namespace jaba
 
 		[[nodiscard]] std::string_view type_name() const noexcept
 		{
+			if (!type_name_)
+				return { };
+
 			return type_name_;
 		}
 
 		[[nodiscard]] std::string_view field_name() const noexcept
 		{
+			if (!field_name_)
+				return { };
+
 			return field_name_;
 		}
 
 		[[nodiscard]] std::string_view type_string() const noexcept
 		{
+			if (!type_string_)
+				return { };
+
 			return type_string_;
 		}
 
@@ -55,11 +64,17 @@ namespace jaba
 
 		[[nodiscard]] std::string_view type_name() const noexcept
 		{
+			if (!type_name_)
+				return { };
+
 			return type_name_;
 		}
 
 		[[nodiscard]] std::string_view class_name() const noexcept
 		{
+			if (!super_class_name_)
+				return { };
+
 			return super_class_name_;
 		}
 
