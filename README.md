@@ -74,6 +74,8 @@ The stub then jumps to the default native handler from the JVM, which processes 
 # Tests
 
 ## Building
+You must copy your JNI files (jni.h, jni.lib, etc) from your JDK directory to `vendor/jni/` or at have it includable under `<jni/jni.h>` and the library linked.
+
 To build the test Windows DLL (targets Minecraft 1.8.9), run the following commands:
 
 ```
