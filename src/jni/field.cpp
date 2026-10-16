@@ -1,6 +1,7 @@
 #include "field.hpp"
 #include "object.hpp"
 #include "env.hpp"
+#include "types.hpp"
 
 namespace jaba
 {
@@ -26,38 +27,24 @@ namespace jaba
 			} \
 		};
 
-		JABA_FIELD_ACCESSOR(jboolean, Boolean)
-		JABA_FIELD_ACCESSOR(jbyte, Byte)
-		JABA_FIELD_ACCESSOR(jchar, Char)
-		JABA_FIELD_ACCESSOR(jshort, Short)
-		JABA_FIELD_ACCESSOR(jint, Int)
-		JABA_FIELD_ACCESSOR(jlong, Long)
-		JABA_FIELD_ACCESSOR(jfloat, Float)
-		JABA_FIELD_ACCESSOR(jdouble, Double)
-		JABA_FIELD_ACCESSOR(jobject, Object)
+		JABA_FOREACH_JNI_TYPE(JABA_FIELD_ACCESSOR)
 
 #undef JABA_FIELD_ACCESSOR
 	}
 
 	template <class T>
-	T field<T>::get(object obj) const noexcept
+	T field<T>::get(const object obj) const noexcept
 	{
 		return accessor<T>::get(jni::env(), obj.obj(), obj_, is_static_);
 	}
 
 	template <class T>
-	void field<T>::set(object obj, T val) noexcept
+	void field<T>::set(const object obj, const T val) noexcept
 	{
 		accessor<T>::set(jni::env(), obj.obj(), obj_, is_static_, val);
 	}
 
-	template class field<jboolean>;
-	template class field<jbyte>;
-	template class field<jchar>;
-	template class field<jshort>;
-	template class field<jint>;
-	template class field<jlong>;
-	template class field<jfloat>;
-	template class field<jdouble>;
-	template class field<jobject>;
+#define JABA_INSTANTIATE_FIELD(type, name) template class field<type>;
+	JABA_FOREACH_JNI_TYPE(JABA_INSTANTIATE_FIELD)
+#undef JABA_INSTANTIATE_FIELD
 }
