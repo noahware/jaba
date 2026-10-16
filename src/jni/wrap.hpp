@@ -10,10 +10,15 @@ namespace jaba
 
 		jni_wrap() noexcept = default;
 
-		jni_wrap(const value_type val)
-			: val_(val) { }
+		jni_wrap(const value_type obj)
+			: obj_(obj) { }
+
+		[[nodiscard]] value_type obj() const noexcept
+		{
+			return obj_;
+		}
 
 	protected:
-		value_type val_;
+		value_type obj_;
 	};
 }
