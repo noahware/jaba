@@ -1,6 +1,6 @@
 # jaba
 
-Modern C++ library which natively hooks java methods. The library requires at least C++ 20. Tested on Windows and JDK 8, 17, 25. This basically rewrites internal JVM method structures to give the user a *native* JNI handler as the detour. It also does **not** use JVMTI for deoptimising methods.
+Modern C++ library which natively hooks java methods. The library requires at least C++ 20. Tested on Windows and Linux on JDK 8, 17, 25. This basically rewrites internal JVM method structures to give the user a *native* JNI handler as the detour. It also does **not** use JVMTI for deoptimising methods.
 
 The idea for the hooking method was made in collaboration with [Lefraudeur](https://github.com/Lefraudeur).
 
@@ -76,14 +76,14 @@ The stub then jumps to the default native handler from the JVM, which processes 
 ## Building
 You must copy your JNI files (jni.h, jni.lib, etc) from your JDK directory to `vendor/jni/` or at have it includable under `<jni/jni.h>` and the library linked.
 
-To build the test Windows DLL (targets Minecraft 1.8.9), run the following commands:
+To build the test for your OS (Linux bundles a test java app, Windows targets Minecraft 1.8.9), do the following commands:
 
 ```
 cmake -B build
 cmake --build build --config Release
 ```
 
-## Running
+## Running Windows tests
 
 Load the DLL into a javaw.exe instance of vanilla Minecraft 1.8.9 and it will log the yaw and pitch when `setAngles` is called.
 
