@@ -12,6 +12,10 @@ cmake-after = """
 if(WIN32)
     enable_language(ASM_MASM)
 endif()
+
+# force a reconfigure (and re-run of cmkr's glob) whenever a file is added to or removed
+# from src/, so new files get picked up without having to touch cmake.toml by hand
+file(GLOB_RECURSE JABA_SOURCE_GLOB_CHECK CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
 """
 
 [find-package.JNI]
