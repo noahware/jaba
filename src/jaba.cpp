@@ -1,4 +1,5 @@
 #include "jaba.hpp"
+#include "jni/env.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -12,12 +13,9 @@ bool jaba::init()
 	if (JNI_GetCreatedJavaVMs(&vm, 1, &vm_count) != JNI_OK || !vm_count)
 		return false;
 
-	JNIEnv* env = nullptr;
+	jaba::jni::set_vm(vm);
 
-	const jint status = vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
-
-	// only detach a thread this call attached, an already attached caller must stay attached
-	const bool attached = status == JNI_EDETACHED && vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr) == JNI_OK;
+	JNIEnv* const env = jaba::jni::env();
 
 	if (!env)
 		return false;
@@ -28,10 +26,5 @@ bool jaba::init()
 	const jaba::util::image* const jvm = jaba::util::image::find("libjvm.so");
 #endif
 
-	const bool ok = jvm && jaba::jvm::abstract_interpreter::init(env) && jaba::jvm::deopt::init(env, jvm);
-
-	if (attached)
-		vm->DetachCurrentThread();
-
-	return ok;
+	return jvm && jaba::jvm::abstract_interpreter::init(env) && jaba::jvm::deopt::init(env, jvm);
 }

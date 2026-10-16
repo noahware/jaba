@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 #include <jni/jni.h>
+#include "jni/env.hpp"
 #include "util/image.hpp"
 
 // deoptimizes every compiled method through the whitebox native the jvm already ships
@@ -15,7 +16,6 @@ namespace jaba::jvm::deopt
 	{
 		using run_t = void(*)(JNIEnv*, jobject);
 
-		inline JavaVM* vm = nullptr;
 		inline run_t run_fn = nullptr;
 
 		[[nodiscard]] inline const std::uint8_t* scan(const jaba::util::image* const jvm, const std::string_view bytes)
@@ -48,9 +48,6 @@ namespace jaba::jvm::deopt
 
 	[[nodiscard]] inline bool init(JNIEnv* const env, const jaba::util::image* const jvm)
 	{
-		if (env->GetJavaVM(&detail::vm) != JNI_OK)
-			return false;
-
 		detail::run_fn = reinterpret_cast<detail::run_t>(detail::find_native(jvm, std::string_view("deoptimizeAll\0", 14), "()V"));
 
 		return detail::run_fn;
@@ -59,19 +56,11 @@ namespace jaba::jvm::deopt
 	// blocks until the vm operation is done, so never call it while holding a lock a java thread can wait on
 	inline void run()
 	{
-		JNIEnv* env = nullptr;
-
-		const jint status = detail::vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
-
-		// only detach a thread this call attached, an already attached caller must stay attached
-		const bool attached = status == JNI_EDETACHED && detail::vm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr) == JNI_OK;
+		JNIEnv* const env = jni::env();
 
 		if (!env)
 			return;
 
 		detail::run_fn(env, nullptr);
-
-		if (attached)
-			detail::vm->DetachCurrentThread();
 	}
 }
