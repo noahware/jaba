@@ -1,6 +1,8 @@
 #pragma once
 #include "vm_struct.hpp"
+#include <cstring>
 #include <format>
+#include <optional>
 #include <vector>
 #include <stdexcept>
 #include <string_view>

@@ -4,6 +4,7 @@
 #include "jvm/method.hpp"
 #include <unordered_map>
 #include <functional>
+#include <mutex>
 #include <shared_mutex>
 
 using namespace jaba;
@@ -81,8 +82,8 @@ namespace
 
 		auto& stored = hooks.emplace(orig_method, std::move(hk)).first->second;
 
-		orig_method->set_from_interp_entry(jaba_hk_stub);
-		orig_method->set_i2i_entry(jaba_hk_stub);
+		orig_method->set_from_interp_entry(reinterpret_cast<void*>(jaba_hk_stub));
+		orig_method->set_i2i_entry(reinterpret_cast<void*>(jaba_hk_stub));
 
 		return reinterpret_cast<jmethodID>(&stored.native_method_ptr);
 	}

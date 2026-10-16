@@ -1,5 +1,8 @@
 #include "jaba.hpp"
+
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 
 bool jaba::init()
 {
@@ -19,7 +22,11 @@ bool jaba::init()
 	if (!env)
 		return false;
 
-	const auto jvm = reinterpret_cast<const pe::image*>(GetModuleHandleA("jvm.dll"));
+#ifdef _WIN32
+	const auto jvm = reinterpret_cast<const util::image*>(GetModuleHandleA("jvm.dll"));
+#else
+	const util::image* const jvm = util::image::find("libjvm.so");
+#endif
 
 	const bool ok = jvm && abstract_interpreter::init(env) && deopt::init(env, jvm);
 

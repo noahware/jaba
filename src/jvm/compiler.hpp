@@ -22,6 +22,10 @@ namespace jaba
 			return native_entry;
 		}
 
+		// hidden so the linux stub can jmp through it pc relative from inside a shared object
+#ifndef _WIN32
+		__attribute__((visibility("hidden")))
+#endif
 		static std::uint8_t* native_entry;
 	};
 }

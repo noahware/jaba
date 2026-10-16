@@ -27,15 +27,23 @@ endif()
 project(jaba
 	LANGUAGES
 		CXX
-		ASM_MASM
 )
 
+if(WIN32)
+    enable_language(ASM_MASM)
+endif()
+
+# Packages
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
+	find_package(JNI REQUIRED)
+
+endif()
 # Target: jaba
 set(jaba_SOURCES
 	cmake.toml
 	"src/hook/hook.cpp"
 	"src/hook/hook.hpp"
-	"src/hook/jaba_hk_stub.asm"
+	"src/hook/jaba_hk_stub_elf.cpp"
 	"src/jaba.cpp"
 	"src/jaba.hpp"
 	"src/jvm/compiler.hpp"
@@ -47,12 +55,25 @@ set(jaba_SOURCES
 	"src/jvm/version.hpp"
 	"src/jvm/vm_struct.cpp"
 	"src/jvm/vm_struct.hpp"
+	"src/util/image.hpp"
 	"src/util/scan.hpp"
-	"tests/dllmain.cpp"
-	"tests/java/java.hpp"
-	"tests/util/log.cpp"
-	"tests/util/log.hpp"
 )
+
+if(WIN32) # windows
+	list(APPEND jaba_SOURCES
+		"src/hook/jaba_hk_stub.asm"
+		"tests/dllmain.cpp"
+		"tests/java/java.hpp"
+		"tests/util/log.cpp"
+		"tests/util/log.hpp"
+	)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
+	list(APPEND jaba_SOURCES
+		"tests/linux/test.cpp"
+	)
+endif()
 
 add_library(jaba SHARED)
 
@@ -63,6 +84,13 @@ target_compile_features(jaba PUBLIC
 	cxx_std_23
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
+	target_include_directories(jaba PUBLIC
+		"tests/linux/include"
+		${JNI_INCLUDE_DIRS}
+	)
+endif()
+
 target_include_directories(jaba PUBLIC
 	src
 	tests
@@ -70,6 +98,14 @@ target_include_directories(jaba PUBLIC
 	"vendor/pe/include"
 )
 
-target_link_libraries(jaba PUBLIC
-	"${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"
-)
+if(WIN32) # windows
+	target_link_libraries(jaba PUBLIC
+		"${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"
+	)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
+	target_link_libraries(jaba PUBLIC
+		${CMAKE_DL_LIBS}
+	)
+endif()

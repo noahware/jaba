@@ -3,6 +3,7 @@
 #include "jaba.hpp"
 #include "hook/hook.hpp"
 #include "java/java.hpp"
+#include "util/image.hpp"
 #include "util/log.hpp"
 
 namespace

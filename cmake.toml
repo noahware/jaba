@@ -2,18 +2,37 @@
 version = "3.15"
 cmkr-include = "cmake/cmkr.cmake"
 
+[conditions]
+linux = "CMAKE_SYSTEM_NAME STREQUAL \"Linux\""
+
 [project]
 name = "jaba"
-languages = ["CXX", "ASM_MASM"]
+languages = ["CXX"]
+cmake-after = """
+if(WIN32)
+    enable_language(ASM_MASM)
+endif()
+"""
+
+[find-package.JNI]
+condition = "linux"
+required = true
 
 [target.jaba]
 type = "shared"
 sources = [
     "src/**.cpp",
     "src/**.hpp",
+]
+windows.sources = [
     "src/hook/jaba_hk_stub.asm",
-    "tests/**.cpp",
-    "tests/**.hpp",
+    "tests/*.cpp",
+    "tests/util/*.cpp",
+    "tests/util/*.hpp",
+    "tests/java/*.hpp",
+]
+linux.sources = [
+    "tests/linux/test.cpp",
 ]
 include-directories = [
     "src",
@@ -21,5 +40,10 @@ include-directories = [
     "vendor",
     "vendor/pe/include",
 ]
+linux.include-directories = [
+    "tests/linux/include",
+    "${JNI_INCLUDE_DIRS}",
+]
 compile-features = ["cxx_std_23"]
-link-libraries = ["${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"]
+windows.link-libraries = ["${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"]
+linux.link-libraries = ["${CMAKE_DL_LIBS}"]
