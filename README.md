@@ -4,21 +4,6 @@ Modern C++ library which natively hooks java methods. The library requires at le
 
 The idea for the hooking method was made in collaboration with [Lefraudeur](https://github.com/Lefraudeur).
 
-# How does it work
-
-The internal JVM structure of the method is cloned, and two pointers are inserted at the end of it:
-
-- The detour (native) method handler.
-- Nullptr for the signature handler (JVM will populate it).
-
-The copied method is also marked as native.
-
-Instead of using JVMTI, it calls internal JVM functions to deoptimise methods. The method and all potentially inlined call sites are deoptimised through calls to these JVM functions.
-
-The method is then forced to be non-compilable and non-inlineable. The `from_interpreted` and `i2i` routines (stubs the JVM calls to transition into the method) are set to an assembly stub we write. In these transition routines, `rbx` holds the method pointer. The assembly checks if that method is hooked, and if it is then `rbx` is set to the *cloned* copy.
-
-The stub then jumps to the default native handler from the JVM, which processes `rbx` as a native C++ method, which calls the detour (user code) that was inserted to the method copy. The user now is in their detour with hooked function parameters already passed via the native calling convention.
-
 # Examples
 
 # Setting up
@@ -71,6 +56,21 @@ if (!jaba::unhook_method(set_angles_mid))
     LOG("unable to unhook set angles");
 ```
 
+# How does it work
+
+The internal JVM structure of the method is cloned, and two pointers are inserted at the end of it:
+
+- The detour (native) method handler.
+- Nullptr for the signature handler (JVM will populate it).
+
+The copied method is also marked as native.
+
+Instead of using JVMTI, it calls internal JVM functions to deoptimise methods. The method and all potentially inlined call sites are deoptimised through calls to these JVM functions.
+
+The method is then forced to be non-compilable and non-inlineable. The `from_interpreted` and `i2i` routines (stubs the JVM calls to transition into the method) are set to an assembly stub we write. In these transition routines, `rbx` holds the method pointer. The assembly checks if that method is hooked, and if it is then `rbx` is set to the *cloned* copy.
+
+The stub then jumps to the default native handler from the JVM, which processes `rbx` as a native C++ method, which calls the detour (user code) that was inserted to the method copy. The user now is in their detour with hooked function parameters already passed via the native calling convention.
+
 # Tests
 
 ## Building
@@ -91,3 +91,4 @@ Load the DLL into a javaw.exe instance of vanilla Minecraft 1.8.9 and it will lo
 
 # License
 
+The project uses the Apache-2.0 license.
