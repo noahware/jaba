@@ -36,6 +36,7 @@ set(jaba_SOURCES
 	"src/hook/hook.cpp"
 	"src/hook/hook.hpp"
 	"src/hook/jaba_hk_stub.asm"
+	"src/jaba.cpp"
 	"src/jaba.hpp"
 	"src/jvm/compiler.hpp"
 	"src/jvm/deopt.hpp"
@@ -49,7 +50,6 @@ set(jaba_SOURCES
 	"src/util/scan.hpp"
 	"tests/dllmain.cpp"
 	"tests/java/java.hpp"
-	"tests/util/image.hpp"
 	"tests/util/log.cpp"
 	"tests/util/log.hpp"
 )

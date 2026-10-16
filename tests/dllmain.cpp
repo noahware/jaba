@@ -27,10 +27,7 @@ namespace
         util::log::init();
         java::init();
 
-        pe::image* const jvm = util::find_img("jvm.dll");
-        LOG("jvm {}, size {}", jvm->as<std::uintptr_t>(), jvm->size());
-
-        if (!jaba::init(java::env(), jvm))
+        if (!jaba::init())
         {
             LOG("failed to init jaba");
 
