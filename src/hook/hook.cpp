@@ -6,6 +6,8 @@
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
+#include <vector>
+#include <memory>
 
 using namespace jaba;
 
@@ -21,11 +23,19 @@ namespace
 		jvm_type_copy<method> native_method;
 		void* orig_interp_entry;
 		void* orig_i2i_entry;
+		method::access_flags orig_acc_flags;
+		std::uint8_t orig_flags;
 	};
 
 	// key is original method
 	std::shared_mutex hooks_mtx;
-	std::unordered_map<method*, hook> hooks;
+	std::unordered_map<method*, std::unique_ptr<hook>> hooks;
+
+	// unhook never frees a hook: a thread can already be inside jaba_hk_stub with
+	// native_method_ptr loaded, past the point jaba_hook_c_handler takes hooks_mtx, so there is
+	// no safe point at which to reclaim it. retired hooks are kept alive for the process
+	// lifetime instead of risking a use-after-free on that in-flight call
+	std::vector<std::unique_ptr<hook>> retired_hooks;
 
 	jvm_type_copy<method> make_native_handler(const method* const m, const method_detour_t detour)
 	{
@@ -56,6 +66,10 @@ namespace
 				return { };
 		}
 
+		// snapshot the flags before recompile_method can touch them
+		const method::access_flags orig_acc_flags = orig_method->acc_flags();
+		const std::uint8_t orig_flags = orig_method->flags();
+
 		if (!recompile_method(orig_method))
 			return { };
 
@@ -73,14 +87,17 @@ namespace
 
 		jvm_type_copy<method> native_method = make_native_handler(orig_method, detour);
 
-		hook hk = {
+		auto hk = std::make_unique<hook>(hook{
 			.native_method_ptr = native_method.data(),
 			.native_method = std::move(native_method),
 			.orig_interp_entry = orig_method->from_interp_entry(),
-			.orig_i2i_entry = orig_method->i2i_entry()
-		};
+			.orig_i2i_entry = orig_method->i2i_entry(),
+			.orig_acc_flags = orig_acc_flags,
+			.orig_flags = orig_flags
+		});
 
-		auto& stored = hooks.emplace(orig_method, std::move(hk)).first->second;
+		// heap-allocated and never freed (see retired_hooks), so this address outlives unhook
+		auto& stored = *hooks.emplace(orig_method, std::move(hk)).first->second;
 
 		orig_method->set_from_interp_entry(reinterpret_cast<void*>(jaba_hk_stub));
 		orig_method->set_i2i_entry(reinterpret_cast<void*>(jaba_hk_stub));
@@ -116,11 +133,16 @@ bool jaba::unhook_method(const jmethodID jmethod)
 	if (it == hooks.end())
 		return false;
 
-	const auto& hk = it->second;
+	auto& hk = *it->second;
 
 	orig_method->set_from_interp_entry(hk.orig_interp_entry);
 	orig_method->set_i2i_entry(hk.orig_i2i_entry);
+	orig_method->set_acc_flags(hk.orig_acc_flags);
+	orig_method->set_flags(hk.orig_flags);
 
+	// move out rather than erase-and-destroy: a thread can still be mid-flight through
+	// jaba_hk_stub using native_method, so the hook outlives its entry in "hooks"
+	retired_hooks.push_back(std::move(it->second));
 	hooks.erase(it);
 
 	return true;
@@ -134,7 +156,7 @@ extern "C" void jaba_hook_c_handler(method** method)
 
 	if (it != hooks.end())
 	{
-		auto& hk = it->second;
+		auto& hk = *it->second;
 
 		*method = hk.native_method.data();
 	}
