@@ -4,22 +4,25 @@
 
 namespace jaba
 {
-	class zstring_view;
+	class object;
 
 	template <class T>
 	class field : public jni_wrap<jfieldID>
 	{
 	public:
-		using jni_wrap::jni_wrap;
+		field(const jfieldID id, const bool is_static) noexcept
+			:	jni_wrap(id), is_static_(is_static) { }
 
-		[[nodiscard]] T get() const noexcept
+		// for static fields, obj is the declaring class
+		[[nodiscard]] T get(object obj) const noexcept;
+		void set(object obj, T val) noexcept;
+
+		[[nodiscard]] bool is_static() const noexcept
 		{
-			return { };
+			return is_static_;
 		}
 
-		void set(const T val) noexcept
-		{
-			
-		}
+	protected:
+		bool is_static_;
 	};
 }
