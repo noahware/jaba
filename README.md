@@ -1,6 +1,6 @@
 # jaba
 
-Modern C++ library which natively hooks java methods. The library requires at least C++ 20. Tested on Windows and Linux on JDK 8, 17, 25. This basically rewrites internal JVM method structures to give the user a *native* JNI handler as the detour. It also does **not** use JVMTI for deoptimising methods.
+Modern C++ library which natively hooks java methods. The library requires at least C++ 20. Tested on x64 Windows and Linux on JDK 8, 17, 25. This basically rewrites internal JVM method structures to give the user a *native* JNI handler as the detour. It also does **not** use JVMTI for deoptimising methods.
 
 The idea for the hooking method was made in collaboration with [Lefraudeur](https://github.com/Lefraudeur).
 
