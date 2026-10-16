@@ -6,7 +6,7 @@ The idea for the hooking method was made in collaboration with [Lefraudeur](http
 
 # Examples
 
-# Setting up
+## Setting up
 
 Before setting up any hooks, call the `init` function:
 
@@ -17,7 +17,7 @@ else
     LOG("jaba failed to initialise");
 ```
 
-# Hook detours
+## Hook detours
 
 The detours take a JNI env as arg0, the jobject of the instance as arg1, then the hooked function signature is pushed as the remaining arguments.
 
@@ -34,7 +34,7 @@ void set_angles_detour(JNIEnv* const env, const jobject obj, const jfloat yaw, c
 }
 ```
 
-# Placing hooks
+## Placing hooks
 
 `jaba::hook_method` takes the jmethodID and detour routine. It returns an optional jmethodID (present if hook succeeded) which is the callable original method.
 
@@ -47,7 +47,7 @@ if (!orig_set_angles)
     LOG("failed to hook set angles");
 ```
 
-# Removing hooks
+## Removing hooks
 
 `jaba::unhook_method` takes the the hooked jmethodID and removes it:
 
