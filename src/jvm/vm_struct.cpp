@@ -1,17 +1,17 @@
 #include "vm_struct.hpp"
 
 #ifdef _WIN32
-extern "C" __declspec(dllimport) jaba::vm_struct_entry* gHotSpotVMStructs;
-extern "C" __declspec(dllimport) jaba::vm_type_entry* gHotSpotVMTypes;
+extern "C" __declspec(dllimport) jaba::jvm::vm_struct_entry* gHotSpotVMStructs;
+extern "C" __declspec(dllimport) jaba::jvm::vm_type_entry* gHotSpotVMTypes;
 #else
 #include <dlfcn.h>
 
 // libjvm.so exports these, looked up at runtime so nothing has to link against it
-#define gHotSpotVMStructs (*static_cast<jaba::vm_struct_entry**>(dlsym(RTLD_DEFAULT, "gHotSpotVMStructs")))
-#define gHotSpotVMTypes (*static_cast<jaba::vm_type_entry**>(dlsym(RTLD_DEFAULT, "gHotSpotVMTypes")))
+#define gHotSpotVMStructs (*static_cast<jaba::jvm::vm_struct_entry**>(dlsym(RTLD_DEFAULT, "gHotSpotVMStructs")))
+#define gHotSpotVMTypes (*static_cast<jaba::jvm::vm_type_entry**>(dlsym(RTLD_DEFAULT, "gHotSpotVMTypes")))
 #endif
 
-namespace jaba
+namespace jaba::jvm
 {
 	vm_struct_entry* vm_struct_entry::find(const std::string_view type_name, const std::string_view field_name) noexcept
 	{

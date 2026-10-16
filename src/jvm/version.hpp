@@ -1,6 +1,6 @@
 #pragma once
 
-namespace jaba
+namespace jaba::jvm
 {
 	bool pre_jdk9();
 }

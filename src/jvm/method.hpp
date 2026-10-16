@@ -4,7 +4,7 @@
 #include "version.hpp"
 #include <jni/jni.h>
 
-namespace jaba
+namespace jaba::jvm
 {
 	class nmethod : public jvm_type<"nmethod">
 	{

@@ -10,6 +10,7 @@
 #include <memory>
 
 using namespace jaba;
+using namespace jaba::jvm;
 
 extern "C" void jaba_hk_stub();
 

@@ -1,5 +1,5 @@
 extern jaba_hook_c_handler : proc;
-extern ?native_entry@abstract_interpreter@jaba@@2PEAEEA : qword
+extern ?native_entry@abstract_interpreter@jvm@jaba@@2PEAEEA : qword
 
 .code
 	; these exclude rbx as that is what the C handler will modify
@@ -60,6 +60,6 @@ extern ?native_entry@abstract_interpreter@jaba@@2PEAEEA : qword
 
 		pop_most_regs
 
-		jmp ?native_entry@abstract_interpreter@jaba@@2PEAEEA
+		jmp ?native_entry@abstract_interpreter@jvm@jaba@@2PEAEEA
 	jaba_hk_stub endp
 end

@@ -4,7 +4,7 @@
 
 #include "method.hpp"
 
-namespace jaba
+namespace jaba::jvm
 {
 	class abstract_interpreter
 	{

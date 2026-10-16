@@ -9,7 +9,7 @@
 
 // deoptimizes every compiled method through the whitebox native the jvm already ships
 // the natives are never registered without -XX:+WhiteBoxAPI, but the JNINativeMethod table is always in the binary
-namespace jaba::deopt
+namespace jaba::jvm::deopt
 {
 	namespace detail
 	{
@@ -18,7 +18,7 @@ namespace jaba::deopt
 		inline JavaVM* vm = nullptr;
 		inline run_t run_fn = nullptr;
 
-		[[nodiscard]] inline const std::uint8_t* scan(const util::image* const jvm, const std::string_view bytes)
+		[[nodiscard]] inline const std::uint8_t* scan(const jaba::util::image* const jvm, const std::string_view bytes)
 		{
 			std::string sig;
 
@@ -29,7 +29,7 @@ namespace jaba::deopt
 		}
 
 		// the name needs its terminator so deoptimizeMethod does not match deoptimizeMethod0
-		[[nodiscard]] inline void* find_native(const util::image* const jvm, const std::string_view name, const char* const sig)
+		[[nodiscard]] inline void* find_native(const jaba::util::image* const jvm, const std::string_view name, const char* const sig)
 		{
 			const std::uint8_t* const str = scan(jvm, name);
 
@@ -46,7 +46,7 @@ namespace jaba::deopt
 		}
 	}
 
-	[[nodiscard]] inline bool init(JNIEnv* const env, const util::image* const jvm)
+	[[nodiscard]] inline bool init(JNIEnv* const env, const jaba::util::image* const jvm)
 	{
 		if (env->GetJavaVM(&detail::vm) != JNI_OK)
 			return false;

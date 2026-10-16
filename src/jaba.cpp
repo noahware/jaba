@@ -23,12 +23,12 @@ bool jaba::init()
 		return false;
 
 #ifdef _WIN32
-	const auto jvm = reinterpret_cast<const util::image*>(GetModuleHandleA("jvm.dll"));
+	const auto jvm = reinterpret_cast<const jaba::util::image*>(GetModuleHandleA("jvm.dll"));
 #else
-	const util::image* const jvm = util::image::find("libjvm.so");
+	const jaba::util::image* const jvm = jaba::util::image::find("libjvm.so");
 #endif
 
-	const bool ok = jvm && abstract_interpreter::init(env) && deopt::init(env, jvm);
+	const bool ok = jvm && jaba::jvm::abstract_interpreter::init(env) && jaba::jvm::deopt::init(env, jvm);
 
 	if (attached)
 		vm->DetachCurrentThread();

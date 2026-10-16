@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace jaba
+namespace jaba::jvm
 {
 	class vm_struct_entry
 	{

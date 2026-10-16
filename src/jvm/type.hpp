@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <string_view>
 
-namespace jaba
+namespace jaba::jvm
 {
     template<size_t N>
     struct fixed_string

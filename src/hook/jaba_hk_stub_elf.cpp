@@ -56,7 +56,7 @@ jaba_hk_stub:
 	pop rax
 	popfq
 
-	jmp qword ptr [rip + _ZN4jaba20abstract_interpreter12native_entryE]
+	jmp qword ptr [rip + _ZN4jaba3jvm20abstract_interpreter12native_entryE]
 .size jaba_hk_stub, .-jaba_hk_stub
 .att_syntax
 )");
