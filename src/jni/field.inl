@@ -2,6 +2,7 @@
 #include "field.hpp"
 #include "clazz.hpp"
 #include "env.hpp"
+#include "signature.hpp"
 
 namespace jaba
 {
@@ -11,10 +12,10 @@ namespace jaba
 		static const jfieldID id = [&]
 		{
 			const jclass cls = ClassT::native();
-			//const zstring_view name = mapping();
-			//std::string sig(name.begin(), name.end());
+			const zstring_view name = mapping();
+			const std::string desc = sig::form<ValT>();
 
-			return nullptr;//jni::env()->GetFieldID(cls, name.data(), sig.data());
+			return jni::env()->GetFieldID(cls, name.data(), desc.c_str());
 		}();
 		return id;
 	}
