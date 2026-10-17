@@ -7,32 +7,6 @@
 
 namespace jaba
 {
-	namespace detail
-	{
-		// raw jni value -> ValT (clazz types get wrapped in an object)
-		template <class V, class R>
-		[[nodiscard]] V wrap(const R raw)
-		{
-			if constexpr (std::is_same_v<V, R>)
-				return raw;
-			else
-			{
-				static_assert(std::is_constructible_v<V, jobject>, "add 'using clazz::clazz;' to this class");
-				return V{ raw };
-			}
-		}
-
-		// ValT -> raw jni value
-		template <class V>
-		[[nodiscard]] auto unwrap(const V& val) noexcept
-		{
-			if constexpr (std::is_arithmetic_v<V>)
-				return val;
-			else
-				return val.obj();
-		}
-	}
-
 	template <class ValT, class ClassT, fixed_string Mapping, class Loc>
 	jfieldID field<ValT, ClassT, Mapping, Loc>::native()
 	{

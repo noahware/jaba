@@ -2,19 +2,12 @@
 #include <type_traits>
 #include <jni/jni.h>
 #include "../util/fixed_string.hpp"
+#include "member.hpp"
 #include "object.hpp"
 #include "wrap.hpp"
 
-#if defined(_MSC_VER)
-#define JABA_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#else
-#define JABA_NO_UNIQUE_ADDRESS [[no_unique_address]]
-#endif
-
 namespace jaba
 {
-	struct static_loc { };
-
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
 	class method : public mapped<Mapping>
 	{
@@ -32,8 +25,8 @@ namespace jaba
 		}
 	};
 
-	template <class ValT, class ClassT, fixed_string Mapping>
-	using static_method = method<ValT, ClassT, Mapping, static_loc>;
+	template <class ClassT, fixed_string Mapping, class RetT, class... ArgsT>
+	using static_method = method<ClassT, Mapping, static_loc, RetT, ArgsT...>;
 }
 
 #include "method.inl"
