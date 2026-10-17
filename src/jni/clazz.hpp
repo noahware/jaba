@@ -1,8 +1,8 @@
 #pragma once
 #include <jni/jni.h>
-
-#include "env.hpp"
 #include "../util/zstring_view.hpp"
+#include "field.hpp"
+#include "object.hpp"
 #include "wrap.hpp"
 
 namespace jaba
@@ -15,12 +15,15 @@ namespace jaba
 	void set_find_class_fn(find_class_fn fn);
 
 	template <fixed_string Mapping>
-	class clazz : public mapped<Mapping>
+	class clazz : public mapped<Mapping>, public obj_user
 	{
 	public:
-		static jclass resolve()
+		using mapped<Mapping>::mapping;
+		using obj_user::obj_user;
+
+		static jclass native()
 		{
-			return find_class(mapped<Mapping>::mapping());
+			return find_class(mapping());
 		}
 	};
 }
