@@ -1,6 +1,5 @@
 #pragma once
 #include <util/fixed_string.hpp>
-
 #include "mapping.hpp"
 
 namespace jaba
