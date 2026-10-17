@@ -23,7 +23,18 @@ namespace jaba
 
 		static jclass native()
 		{
-			return find_class(mapping());
+			static const jclass cls = []
+				{
+					const jclass local = find_class(mapping());
+					if (!local)
+						throw std::runtime_error(std::format("unable to find class '{}'", Mapping.view()));
+
+					const auto global = static_cast<jclass>(jni::env()->NewGlobalRef(local));
+					jni::env()->DeleteLocalRef(local);
+					return global;
+				}();
+
+			return cls;
 		}
 	};
 }

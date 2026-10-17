@@ -17,15 +17,15 @@ namespace jaba
 
 		static jfieldID native();
 
-		[[nodiscard]] ValT get() const noexcept;
-		void set(ValT val) noexcept;
+		[[nodiscard]] ValT get() const;
+		void set(ValT val);
 
-		[[nodiscard]] operator ValT() const noexcept
+		[[nodiscard]] operator ValT() const
 		{
 			return get();
 		}
 
-		field& operator=(ValT val) noexcept
+		field& operator=(ValT val)
 		{
 			set(val);
 			return *this;

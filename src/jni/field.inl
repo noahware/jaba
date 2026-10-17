@@ -47,11 +47,15 @@ namespace jaba
 			else
 				return jni::env()->GetFieldID(cls, name.data(), desc.c_str());
 		}();
+
+		if (!id)
+			throw std::runtime_error(std::format("unable to find field '{}'", Mapping.view()));
+
 		return id;
 	}
 
 	template <class ClassT, fixed_string Mapping, class ValT, bool Static>
-	ValT field<ClassT, Mapping, ValT, Static>::get() const noexcept
+	ValT field<ClassT, Mapping, ValT, Static>::get() const
 	{
 		JNIEnv* const env = jni::env();
 		const jfieldID id = native();
@@ -69,7 +73,7 @@ namespace jaba
 	}
 
 	template <class ClassT, fixed_string Mapping, class ValT, bool Static>
-	void field<ClassT, Mapping, ValT, Static>::set(ValT val) noexcept
+	void field<ClassT, Mapping, ValT, Static>::set(ValT val)
 	{
 		JNIEnv* const env = jni::env();
 		const jfieldID id = native();
