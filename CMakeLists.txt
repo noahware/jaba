@@ -48,6 +48,8 @@ set(jaba_SOURCES
 	"src/hook/hook.cpp"
 	"src/hook/hook.hpp"
 	"src/hook/jaba_hk_stub_elf.cpp"
+	"src/hook/pending.cpp"
+	"src/hook/pending.hpp"
 	"src/jaba.cpp"
 	"src/jaba.hpp"
 	"src/jni/clazz.cpp"
