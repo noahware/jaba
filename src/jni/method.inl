@@ -42,22 +42,40 @@ namespace jaba
 		const jmethodID id = native();
 		JNIEnv* const env = jni::env();
 
+		// has to run right after the call, before the result is wrapped
+		const auto check = [env]
+		{
+			if (env->ExceptionCheck())
+			{
+				env->ExceptionClear();
+
+				throw std::runtime_error(std::format("method {} {} threw exception", Mapping.view(), std::string_view{ ClassT::mapping() }));
+			}
+		};
+
 		if constexpr (std::is_void_v<RetT>)
 		{
 			if constexpr (is_static)
 				env->CallStaticVoidMethod(cls(), id, detail::unwrap(args)...);
 			else
 				env->CallVoidMethod(self(this), id, detail::unwrap(args)...);
+
+			check();
 		}
 		else
 		{
 #define JABA_CALL_MID(type, name) \
 			if constexpr (is_jni_type<RetT, type>) \
 			{ \
-				if constexpr (is_static) \
-					return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, detail::unwrap(args)...)); \
-				else \
-					return detail::wrap<RetT>(env->Call##name##Method(self(this), id, detail::unwrap(args)...)); \
+				const auto raw = [&] \
+				{ \
+					if constexpr (is_static) \
+						return env->CallStatic##name##Method(cls(), id, detail::unwrap(args)...); \
+					else \
+						return env->Call##name##Method(self(this), id, detail::unwrap(args)...); \
+				}(); \
+				check(); \
+				return detail::wrap<RetT>(raw); \
 			}
 			JABA_FOREACH_JNI_TYPE_EX(JABA_CALL_MID)
 #undef JABA_CALL_MID
