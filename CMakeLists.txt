@@ -56,6 +56,7 @@ set(jaba_SOURCES
 	"src/jni/env.hpp"
 	"src/jni/field.hpp"
 	"src/jni/field.inl"
+	"src/jni/jni.hpp"
 	"src/jni/mapping.cpp"
 	"src/jni/mapping.hpp"
 	"src/jni/object.hpp"

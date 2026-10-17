@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <format>
 #include <stdexcept>
 #include <string>
@@ -8,18 +9,17 @@
 
 namespace jaba
 {
-	template <fixed_string Mapping>
-	class clazz;
-
 	namespace sig
 	{
 		namespace detail
 		{
-			template <fixed_string M>
-			void as_clazz(const clazz<M>*);
-
+			// duck typed rather than matching clazz<M, B>, a chain of clazz bases makes deduction ambiguous
 			template <class T>
-			concept clazz_like = requires(T* p) { as_clazz(p); };
+			concept clazz_like = requires
+			{
+				{ T::native() } -> std::same_as<jclass>;
+				{ T::mapping() } -> std::convertible_to<std::string_view>;
+			};
 		}
 
 		template <class T>

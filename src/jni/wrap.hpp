@@ -26,7 +26,7 @@ namespace jaba
 		}
 
 	protected:
-		value_type obj_;
+		value_type obj_{};
 	};
 
 	template <fixed_string Mapping>
