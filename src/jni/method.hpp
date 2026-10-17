@@ -9,16 +9,22 @@
 namespace jaba
 {
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
-	class method : public mapped<Mapping>
+	class method : public clazz_member<ClassT, Mapping, Loc>
 	{
-	public:
-		static constexpr bool is_static = std::is_same_v<Loc, static_loc>;
+		using member = clazz_member<ClassT, Mapping, Loc>;
 
-		using mapped<Mapping>::mapping;
-		
+	public:
+		using member::is_static;
+		using member::mapping;
+
 		[[nodiscard]] static jmethodID native();
 
+		RetT operator()(ArgsT... args) const;
+
 	private:
+		using member::cls;
+		using member::self;
+
 		[[nodiscard]] jobject self() const noexcept
 		{
 			return Loc::owner(this).obj();

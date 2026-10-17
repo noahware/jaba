@@ -18,6 +18,10 @@
 	JABA_FOREACH_JNI_TYPE(X) \
 	X(::jaba::clazz_any, Object)
 
+#define JABA_FOREACH_JNI_METHOD_TYPE_EX(X) \
+	JABA_FOREACH_JNI_TYPE_EX(X) \
+	X(void, Void)
+
 namespace jaba
 {
 	// stands in for "any clazz<M> or type derived from one" in the macros above

@@ -33,4 +33,22 @@ namespace jaba
 
 		return id;
 	}
+
+	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
+	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::operator()(ArgsT... args) const
+	{
+		const jmethodID id = native();
+		JNIEnv* const env = jni::env();
+
+#define JABA_CALL_MID(type, name) \
+		if constexpr (is_jni_type<RetT, type>) \
+		{ \
+			if constexpr (is_static) \
+				return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, args...)); \
+			else \
+				return detail::wrap<RetT>(env->Call##name##Method(self(this), id, args...)); \
+		}
+		JABA_FOREACH_JNI_METHOD_TYPE_EX(JABA_CALL_MID)
+#undef JABA_CALL_MID
+	}
 }

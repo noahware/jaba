@@ -86,6 +86,8 @@ namespace
             {
                 const local_player player = minecraft::mc->player;
 
+                player.jump();
+
                 // x/y/z come from entity_pos_members, yaw/pitch from entity_rot_members
                 const double x = player.x, y = player.y, z = player.z;
                 const float yaw = player.yaw, pitch = player.pitch;
