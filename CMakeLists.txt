@@ -106,6 +106,12 @@ target_compile_features(jaba PUBLIC
 	cxx_std_23
 )
 
+if(WIN32) # windows
+	target_compile_options(jaba PUBLIC
+		"/Zc:preprocessor"
+	)
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
 	target_include_directories(jaba PUBLIC
 		"tests/linux/include"

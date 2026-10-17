@@ -2,6 +2,7 @@
 #include <cstddef>
 #include "clazz.hpp"
 #include "field.hpp"
+#include "method.hpp"
 
 namespace jaba
 {
@@ -26,20 +27,34 @@ namespace jaba
 		using jaba_self = Self; \
 		static constexpr jaba::fixed_string jaba_owner{ mapping };
 
-#define JABA_FIELD(type, name, mapping) \
-		struct name##_loc \
+// walks back from a member's address to the instance its members struct lives in
+#define JABA_MEMBER_LOC(name, loc) \
+		struct loc \
 		{ \
-			static const jaba::object& owner(const void* const field) noexcept \
+			static const jaba::object& owner(const void* const member) noexcept \
 			{ \
 				const auto* const members = reinterpret_cast<const jaba_members*>( \
-					static_cast<const char*>(field) - offsetof(jaba_members, name)); \
+					static_cast<const char*>(member) - offsetof(jaba_members, name)); \
 				return static_cast<const jaba_self&>(*members); \
 			} \
-		}; \
+		};
+
+#define JABA_FIELD(type, name, mapping) \
+		JABA_MEMBER_LOC(name, name##_loc) \
 		JABA_NO_UNIQUE_ADDRESS jaba::field<type, jaba_self, mapping, name##_loc> name;
 
 #define JABA_STATIC_FIELD(type, name, mapping) \
 		inline static jaba::static_field<type, jaba_self, mapping> name;
+
+// argument types follow the mapping, none is fine:
+//   JABA_METHOD(jint, size, "size")
+//   JABA_METHOD(void, set_pos, "setPosition", jdouble, jdouble, jdouble)
+#define JABA_METHOD(ret, name, mapping, ...) \
+		JABA_MEMBER_LOC(name, name##_loc_m) \
+		JABA_NO_UNIQUE_ADDRESS jaba::method<jaba_self, mapping, name##_loc_m, ret __VA_OPT__(,) __VA_ARGS__> name;
+
+#define JABA_STATIC_METHOD(ret, name, mapping, ...) \
+		inline static jaba::static_method<jaba_self, mapping, ret __VA_OPT__(,) __VA_ARGS__> name;
 
 #define JABA_CLASS_END(name) \
 	}; \

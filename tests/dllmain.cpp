@@ -35,8 +35,12 @@ namespace
         JABA_FIELD(jfloat, pitch, "rotationPitch")
     JABA_CLASS_END(entity_rot)
 
-    // multiple inheritance, local_player gets both groups plus its own
-    JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
+    // multiple inheritance, gets both groups plus its own
+    JABA_CLASS_BEGIN(entity_living_base, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
+		JABA_METHOD(void, jump, "jump")
+    JABA_CLASS_END(entity_living_base)
+
+    JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_living_base)
         JABA_FIELD(jboolean, on_ground, "onGround")
     JABA_CLASS_END(local_player)
 
