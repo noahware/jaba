@@ -24,6 +24,11 @@ namespace
         LOG("set angles called {} {}", yaw, pitch);
     }
 
+    // the detour has to be declared before JABA_HOOK names it, the class is only forward
+// declared here (complete types aren't needed to declare it), defined once the class is
+    class entity_living_base;
+    void on_jump(entity_living_base self, void (*original)(entity_living_base));
+
     // two groups of Entity's fields, each its own members struct
     JABA_CLASS_BEGIN(entity_pos, "net/minecraft/entity/Entity")
         JABA_FIELD(jdouble, x, "posX")
@@ -36,16 +41,11 @@ namespace
         JABA_FIELD(jfloat, pitch, "rotationPitch")
     JABA_CLASS_END(entity_rot)
 
-    // the detour has to be declared before JABA_HOOK names it, the class is only forward
-    // declared here (complete types aren't needed to declare it), defined once the class is
-    class entity_living_base;
-    void on_jump(entity_living_base self, void (*original)(entity_living_base));
-
     // multiple inheritance, gets both groups plus its own
     JABA_CLASS_BEGIN(entity_living_base, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
-		JABA_METHOD(void, jump, "jump")
 		JABA_METHOD(void, set_sprinting, "setSprinting", jboolean)
 
+        JABA_METHOD(void, jump, "jump")
 		JABA_HOOK(jump, on_jump)
     JABA_CLASS_END(entity_living_base)
 
@@ -133,6 +133,7 @@ namespace
 
         jaba::unhook_method(set_angles);*/
 
+        jaba::uninit();
         util::log::reset();
 
         FreeLibraryAndExitThread(mod, 0);

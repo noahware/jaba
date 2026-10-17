@@ -10,4 +10,5 @@ namespace jaba
 	std::optional<jmethodID> hook_method(jmethodID jmethod, method_detour_t detour);
 
 	bool unhook_method(jmethodID jmethod);
+	void remove_all_hooks();
 }

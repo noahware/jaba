@@ -6,5 +6,6 @@
 
 namespace jaba
 {
-	[[nodiscard]] bool init();
+	bool init();
+	void uninit();
 }

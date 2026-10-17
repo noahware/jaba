@@ -30,7 +30,10 @@ bool jaba::init()
 	if (!jvm || !jvm::abstract_interpreter::init(env) || !jvm::deopt::init(env, jvm))
 		return false;
 
-	flush_queued_hooks();
-
 	return true;
+}
+
+void jaba::uninit()
+{
+	remove_all_hooks();
 }
