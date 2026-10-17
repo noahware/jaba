@@ -30,6 +30,21 @@ namespace jaba
 			set(val);
 			return *this;
 		}
+
+		struct val_holder
+		{
+			ValT val;
+
+			[[nodiscard]] ValT* operator->() noexcept
+			{
+				return &val;
+			}
+		};
+
+		[[nodiscard]] val_holder operator->() const
+		{
+			return { get() };
+		}
 	};
 
 	template <class ClassT, fixed_string Mapping, class ValT>
