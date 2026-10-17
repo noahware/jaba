@@ -16,7 +16,10 @@ namespace jaba
 			if constexpr (std::is_same_v<V, R>)
 				return raw;
 			else
+			{
+				static_assert(std::is_constructible_v<V, object>, "add 'using clazz::clazz;' to this class");
 				return V{ object{ raw } };
+			}
 		}
 
 		// ValT -> raw jni value
@@ -26,7 +29,7 @@ namespace jaba
 			if constexpr (std::is_arithmetic_v<V>)
 				return val;
 			else
-				return val.obj().obj();
+				return val.obj();
 		}
 	}
 
@@ -59,7 +62,7 @@ namespace jaba
 			if constexpr (Static) \
 				return detail::wrap<ValT>(env->GetStatic##name##Field(ClassT::native(), id)); \
 			else \
-				return detail::wrap<ValT>(env->Get##name##Field(obj_.obj(), id)); \
+				return detail::wrap<ValT>(env->Get##name##Field(obj_, id)); \
 		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_GET)
 #undef JABA_GET
@@ -77,7 +80,7 @@ namespace jaba
 			if constexpr (Static) \
 				env->SetStatic##name##Field(ClassT::native(), id, detail::unwrap(val)); \
 			else \
-				env->Set##name##Field(obj_.obj(), id, detail::unwrap(val)); \
+				env->Set##name##Field(obj_, id, detail::unwrap(val)); \
 		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_SET)
 #undef JABA_SET

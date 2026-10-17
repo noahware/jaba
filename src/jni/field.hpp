@@ -9,11 +9,11 @@ namespace jaba
 	class object;
 
 	template <class ClassT, fixed_string Mapping, class ValT, bool Static = false>
-	class field : public mapped<Mapping>, public obj_user
+	class field : public mapped<Mapping>, public object
 	{
 	public:
 		using mapped<Mapping>::mapping;
-		using obj_user::obj_user;
+		using object::object;
 
 		static jfieldID native();
 

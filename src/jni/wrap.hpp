@@ -15,6 +15,11 @@ namespace jaba
 		jni_wrap(const value_type obj)
 			: obj_(obj) { }
 
+		[[nodiscard]] operator value_type() const noexcept
+		{
+			return obj_;
+		}
+
 		[[nodiscard]] value_type obj() const noexcept
 		{
 			return obj_;

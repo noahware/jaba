@@ -15,11 +15,11 @@ namespace jaba
 	void set_find_class_fn(find_class_fn fn);
 
 	template <fixed_string Mapping>
-	class clazz : public mapped<Mapping>, public obj_user
+	class clazz : public mapped<Mapping>, public object
 	{
 	public:
 		using mapped<Mapping>::mapping;
-		using obj_user::obj_user;
+		using object::object;
 
 		static jclass native()
 		{
