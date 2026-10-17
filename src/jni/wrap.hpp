@@ -28,9 +28,9 @@ namespace jaba
 	class mapped
 	{
 	public:
-		[[nodiscard]] static std::string_view mapping() noexcept
+		[[nodiscard]] static zstring_view mapping() noexcept
 		{
-			return fetch_mapping(Mapping);
+			return fetch_mapping(Mapping.zview());
 		}
 	};
 }

@@ -8,7 +8,7 @@ namespace
 	jaba::mappings_t mappings;
 }
 
-std::string_view jaba::fetch_mapping(const std::string_view unobf_name)
+jaba::zstring_view jaba::fetch_mapping(const zstring_view unobf_name)
 {
 	if (mappings.empty())
 		return unobf_name;

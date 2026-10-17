@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include <string_view>
 #include <unordered_map>
+#include "util/zstring_view.hpp"
 
 namespace jaba
 {
@@ -18,6 +18,6 @@ namespace jaba
 	// <unobfuscated, obfuscated>
 	using mappings_t = std::unordered_map<std::string, std::string, string_hash, std::equal_to<>>;
 
-	std::string_view fetch_mapping(std::string_view unobf_name);
+	zstring_view fetch_mapping(zstring_view unobf_name);
 	void load_mappings(mappings_t map);
 }

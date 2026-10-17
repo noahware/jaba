@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <string_view>
+#include "zstring_view.hpp"
 
 namespace jaba
 {
@@ -18,6 +19,11 @@ namespace jaba
 		[[nodiscard]] constexpr std::string_view view() const
 		{
 			return { data, N - 1 };
+		}
+
+		[[nodiscard]] constexpr zstring_view zview() const
+		{
+			return data;
 		}
 
 		[[nodiscard]] constexpr operator std::string_view() const
