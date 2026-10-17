@@ -105,6 +105,36 @@ namespace
 
 		return reinterpret_cast<jmethodID>(&stored.native_method_ptr);
 	}
+
+	// hooks_mtx has to be held exclusively
+	bool unhook_locked(method* const orig_method)
+	{
+		const auto it = hooks.find(orig_method);
+
+		if (it == hooks.end())
+			return false;
+
+		auto& hk = *it->second;
+
+		orig_method->set_from_interp_entry(hk.orig_interp_entry);
+		orig_method->set_i2i_entry(hk.orig_i2i_entry);
+		orig_method->set_acc_flags(hk.orig_acc_flags);
+		orig_method->set_flags(hk.orig_flags);
+
+		// move out rather than erase-and-destroy: a thread can still be mid-flight through
+		// jaba_hk_stub using native_method, so the hook outlives its entry in "hooks"
+		retired_hooks.push_back(std::move(it->second));
+		hooks.erase(it);
+
+		return true;
+	}
+
+	bool raw_unhook_method(method* const orig_method)
+	{
+		std::unique_lock lock(hooks_mtx);
+
+		return unhook_locked(orig_method);
+	}
 }
 
 std::optional<jmethodID> jaba::hook_method(const jmethodID jmethod, const method_detour_t detour)
@@ -127,26 +157,16 @@ bool jaba::unhook_method(const jmethodID jmethod)
 {
 	method* const orig_method = method::from(jmethod);
 
+	return raw_unhook_method(orig_method);
+}
+
+void jaba::remove_all_hooks()
+{
 	std::unique_lock lock(hooks_mtx);
 
-	const auto it = hooks.find(orig_method);
-
-	if (it == hooks.end())
-		return false;
-
-	auto& hk = *it->second;
-
-	orig_method->set_from_interp_entry(hk.orig_interp_entry);
-	orig_method->set_i2i_entry(hk.orig_i2i_entry);
-	orig_method->set_acc_flags(hk.orig_acc_flags);
-	orig_method->set_flags(hk.orig_flags);
-
-	// move out rather than erase-and-destroy: a thread can still be mid-flight through
-	// jaba_hk_stub using native_method, so the hook outlives its entry in "hooks"
-	retired_hooks.push_back(std::move(it->second));
-	hooks.erase(it);
-
-	return true;
+	// unhooking erases the entry, so take the first one each time instead of iterating
+	while (!hooks.empty())
+		unhook_locked(hooks.begin()->first);
 }
 
 extern "C" void jaba_hook_c_handler(method** method)

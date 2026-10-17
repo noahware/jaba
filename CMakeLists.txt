@@ -33,6 +33,10 @@ if(WIN32)
     enable_language(ASM_MASM)
 endif()
 
+# force a reconfigure (and re-run of cmkr's glob) whenever a file is added to or removed
+# from src/, so new files get picked up without having to touch cmake.toml by hand
+file(GLOB_RECURSE JABA_SOURCE_GLOB_CHECK CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl")
+
 # Packages
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
 	find_package(JNI REQUIRED)
@@ -44,8 +48,26 @@ set(jaba_SOURCES
 	"src/hook/hook.cpp"
 	"src/hook/hook.hpp"
 	"src/hook/jaba_hk_stub_elf.cpp"
+	"src/hook/pending.hpp"
+	"src/hook/pending.inl"
 	"src/jaba.cpp"
 	"src/jaba.hpp"
+	"src/jni/clazz.cpp"
+	"src/jni/clazz.hpp"
+	"src/jni/env.cpp"
+	"src/jni/env.hpp"
+	"src/jni/field.hpp"
+	"src/jni/field.inl"
+	"src/jni/jni.hpp"
+	"src/jni/mapping.cpp"
+	"src/jni/mapping.hpp"
+	"src/jni/member.hpp"
+	"src/jni/method.hpp"
+	"src/jni/method.inl"
+	"src/jni/object.hpp"
+	"src/jni/signature.hpp"
+	"src/jni/types.hpp"
+	"src/jni/wrap.hpp"
 	"src/jvm/compiler.hpp"
 	"src/jvm/deopt.hpp"
 	"src/jvm/field.hpp"
@@ -55,8 +77,10 @@ set(jaba_SOURCES
 	"src/jvm/version.hpp"
 	"src/jvm/vm_struct.cpp"
 	"src/jvm/vm_struct.hpp"
+	"src/util/fixed_string.hpp"
 	"src/util/image.hpp"
 	"src/util/scan.hpp"
+	"src/util/zstring_view.hpp"
 )
 
 if(WIN32) # windows
@@ -83,6 +107,12 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${jaba_SOURCES})
 target_compile_features(jaba PUBLIC
 	cxx_std_23
 )
+
+if(WIN32) # windows
+	target_compile_options(jaba PUBLIC
+		"$<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>"
+	)
+endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # linux
 	target_include_directories(jaba PUBLIC

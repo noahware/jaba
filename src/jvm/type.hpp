@@ -1,5 +1,6 @@
 #pragma once
 #include "vm_struct.hpp"
+#include "../util/fixed_string.hpp"
 #include <cstring>
 #include <format>
 #include <optional>
@@ -9,28 +10,6 @@
 
 namespace jaba::jvm
 {
-    template<size_t N>
-    struct fixed_string
-    {
-        char data[N]{};
-
-        constexpr fixed_string(const char(&str)[N])
-        {
-            for (std::size_t i = 0; i < N; ++i)
-            	data[i] = str[i];
-        }
-
-        [[nodiscard]] constexpr std::string_view view() const
-        {
-	        return { data, N - 1 };
-        }
-
-        [[nodiscard]] constexpr operator std::string_view() const
-        {
-	        return view();
-        }
-    };
-
     template <class T>
     class jvm_type_copy
     {
