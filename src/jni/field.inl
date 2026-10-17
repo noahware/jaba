@@ -5,14 +5,16 @@
 
 namespace jaba
 {
-	template <class_type ClassT, fixed_string Mapping, class ValT>
+	template <class ClassT, fixed_string Mapping, class ValT>
 	jfieldID field<ClassT, Mapping, ValT>::native()
 	{
 		static const jfieldID id = [&]
 		{
-			const jclass cls = ClassT::resolve();
-			const auto name = mapping();
-			return jni::env()->GetFieldID(cls, name.data(), nullptr);
+			const jclass cls = ClassT::native();
+			//const zstring_view name = mapping();
+			//std::string sig(name.begin(), name.end());
+
+			return nullptr;//jni::env()->GetFieldID(cls, name.data(), sig.data());
 		}();
 		return id;
 	}
