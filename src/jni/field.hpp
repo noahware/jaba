@@ -20,17 +20,20 @@ namespace jaba
 		[[nodiscard]] ValT get() const noexcept;
 		void set(ValT val) noexcept;
 
+		[[nodiscard]] operator ValT() const noexcept
+		{
+			return get();
+		}
+
 		field& operator=(ValT val) noexcept
 		{
 			set(val);
 			return *this;
 		}
-
-		[[nodiscard]] operator ValT() const noexcept
-		{
-			return get();
-		}
 	};
+
+	template <class ClassT, fixed_string Mapping, class ValT>
+	using static_field = field<ClassT, Mapping, ValT, true>;
 }
 
 #include "field.inl"
