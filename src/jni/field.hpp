@@ -1,28 +1,23 @@
 #pragma once
 #include <jni/jni.h>
+#include "env.hpp"
 #include "wrap.hpp"
+#include "util/zstring_view.hpp"
 
 namespace jaba
 {
 	class object;
 
-	template <class T>
-	class field : public jni_wrap<jfieldID>
+	template <class_type ClassT, fixed_string Mapping, class ValT>
+	class field : public mapped<Mapping>
 	{
 	public:
-		field(const jfieldID id, const bool is_static) noexcept
-			:	jni_wrap(id), is_static_(is_static) { }
+		static jfieldID resolve(zstring_view sig, bool is_static);
 
 		// for static fields, obj is the declaring class
-		[[nodiscard]] T get(object obj) const noexcept;
-		void set(object obj, T val) noexcept;
-
-		[[nodiscard]] bool is_static() const noexcept
-		{
-			return is_static_;
-		}
-
-	protected:
-		bool is_static_;
+		//[[nodiscard]] ValT get(object obj) const noexcept;
+		//void set(object obj, ValT val) noexcept;
 	};
 }
+
+#include "field.inl"
