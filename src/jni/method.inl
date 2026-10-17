@@ -40,15 +40,25 @@ namespace jaba
 		const jmethodID id = native();
 		JNIEnv* const env = jni::env();
 
-#define JABA_CALL_MID(type, name) \
-		if constexpr (is_jni_type<RetT, type>) \
-		{ \
+		if constexpr (std::is_void_v<RetT>)
+		{
 			if constexpr (is_static) \
-				return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, args...)); \
-			else \
-				return detail::wrap<RetT>(env->Call##name##Method(self(this), id, args...)); \
+				env->CallStaticVoidMethod(cls(), id, args...);
+			else
+				env->CallVoidMethod(self(this), id, args...);
 		}
-		JABA_FOREACH_JNI_METHOD_TYPE_EX(JABA_CALL_MID)
+		else
+		{
+#define JABA_CALL_MID(type, name) \
+			if constexpr (is_jni_type<RetT, type>) \
+			{ \
+				if constexpr (is_static) \
+					return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, args...)); \
+				else \
+					return detail::wrap<RetT>(env->Call##name##Method(self(this), id, args...)); \
+			}
+			JABA_FOREACH_JNI_TYPE_EX(JABA_CALL_MID)
+		}
 #undef JABA_CALL_MID
 	}
 }

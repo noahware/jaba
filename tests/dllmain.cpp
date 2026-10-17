@@ -73,6 +73,7 @@ namespace
     { "posX", "s" },
     { "posY", "t" },
     { "posZ", "u" },
+    { "jump", "bF" },
     { "rotationYaw", "y" },
     { "rotationPitch", "z" },
     { "thePlayer", "h" },
@@ -100,7 +101,7 @@ namespace
                 LOG("caught excp: {}", e.what());
             }
 
-            Sleep(15);
+            Sleep(150);
         }
 
         /*const auto set_angles = set_angles_method();
