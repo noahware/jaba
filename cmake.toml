@@ -50,6 +50,6 @@ linux.include-directories = [
     "${JNI_INCLUDE_DIRS}",
 ]
 compile-features = ["cxx_std_23"]
-windows.compile-options = ["/Zc:preprocessor"]
+windows.compile-options = ["$<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>"]
 windows.link-libraries = ["${CMAKE_CURRENT_SOURCE_DIR}/vendor/jni/jvm.lib"]
 linux.link-libraries = ["${CMAKE_DL_LIBS}"]

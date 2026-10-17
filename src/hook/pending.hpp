@@ -2,12 +2,23 @@
 
 namespace jaba
 {
+	using hook_install_fn = void (*)();
+
+	void queue_hook(hook_install_fn install);
+	void flush_queued_hooks();
+
+	template <class Method, typename Method::detour_t Detour>
 	class jni_hook
 	{
 	public:
-		virtual void install() = 0;
-	};
+		// queues the hook, runs at static init so it must not touch the JVM
+		jni_hook()
+		{
+			queue_hook(&install);
+		}
 
-	void queue_hook(jni_hook* jh);
-	void flush_queued_hooks();
+		static void install();
+	};
 }
+
+#include "pending.inl"

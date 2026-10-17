@@ -3,6 +3,7 @@
 #include "clazz.hpp"
 #include "field.hpp"
 #include "method.hpp"
+#include "../hook/pending.hpp"
 
 namespace jaba
 {
@@ -25,6 +26,7 @@ namespace jaba
 	{ \
 		using jaba_members = name##_members; \
 		using jaba_self = Self; \
+		using jaba_decl = name; \
 		static constexpr jaba::fixed_string jaba_owner{ mapping };
 
 // walks back from a member's address to the instance its members struct lives in
@@ -56,6 +58,16 @@ namespace jaba
 #define JABA_STATIC_METHOD(ret, name, mapping, ...) \
 		inline static jaba::static_method<jaba_self, mapping, ret __VA_OPT__(,) __VA_ARGS__> name;
 
+// hooks a method declared above it, the detour is a function declared before the class
+// (qualify it if it's in another namespace):
+//   JABA_METHOD(void, set_pos, "setPosition", jdouble, jdouble, jdouble)
+//   JABA_HOOK(set_pos, on_set_pos)
+#define JABA_HOOK(method, detour) \
+		using method##_mhk_original = typename jaba::method_in_t<decltype(method), jaba_decl>::sig_t*; \
+		inline static jaba::jni_hook<jaba::method_in_t<decltype(method), jaba_decl>, &detour> method##_hook;
+
+// the explicit instantiation constructs the members' inline statics (the hooks), which would
+// otherwise never be instantiated and so never queued, it needs name to be complete
 #define JABA_CLASS_END(name) \
 	}; \
 	class name : public jaba::clazz<name##_members<name>::jaba_owner, name##_members<name>> \
@@ -64,4 +76,5 @@ namespace jaba
 		using clazz::clazz; \
 		template <class Self> \
 		using members = name##_members<Self>; \
-	};
+	}; \
+	template struct name##_members<name>;

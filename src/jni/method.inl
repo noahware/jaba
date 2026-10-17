@@ -37,11 +37,8 @@ namespace jaba
 	}
 
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
-	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::operator()(ArgsT... args) const
+	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::invoke(JNIEnv* const env, const jmethodID id, const jobject target, ArgsT... args)
 	{
-		const jmethodID id = native();
-		JNIEnv* const env = jni::env();
-
 		// has to run right after the call, before the result is wrapped
 		const auto check = [env]
 		{
@@ -56,9 +53,9 @@ namespace jaba
 		if constexpr (std::is_void_v<RetT>)
 		{
 			if constexpr (is_static)
-				env->CallStaticVoidMethod(cls(), id, detail::unwrap(args)...);
+				env->CallStaticVoidMethod(static_cast<jclass>(target), id, detail::unwrap(args)...);
 			else
-				env->CallVoidMethod(self(this), id, detail::unwrap(args)...);
+				env->CallVoidMethod(target, id, detail::unwrap(args)...);
 
 			check();
 		}
@@ -70,9 +67,9 @@ namespace jaba
 				const auto raw = [&] \
 				{ \
 					if constexpr (is_static) \
-						return env->CallStatic##name##Method(cls(), id, detail::unwrap(args)...); \
+						return env->CallStatic##name##Method(static_cast<jclass>(target), id, detail::unwrap(args)...); \
 					else \
-						return env->Call##name##Method(self(this), id, detail::unwrap(args)...); \
+						return env->Call##name##Method(target, id, detail::unwrap(args)...); \
 				}(); \
 				check(); \
 				return detail::wrap<RetT>(raw); \
@@ -80,5 +77,19 @@ namespace jaba
 			JABA_FOREACH_JNI_TYPE_EX(JABA_CALL_MID)
 #undef JABA_CALL_MID
 		}
+	}
+
+	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
+	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::operator()(ArgsT... args) const
+	{
+		const jobject target = [&]
+		{
+			if constexpr (is_static)
+				return static_cast<jobject>(cls());
+			else
+				return self(this);
+		}();
+
+		return invoke(jni::env(), native(), target, args...);
 	}
 }

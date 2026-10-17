@@ -2,6 +2,7 @@
 
 #include "jaba.hpp"
 #include "hook/hook.hpp"
+#include "hook/pending.hpp"
 #include "java/java.hpp"
 #include "jni/jni.hpp"
 #include "util/image.hpp"
@@ -35,11 +36,25 @@ namespace
         JABA_FIELD(jfloat, pitch, "rotationPitch")
     JABA_CLASS_END(entity_rot)
 
+    // the detour has to be declared before JABA_HOOK names it, the class is only forward
+    // declared here (complete types aren't needed to declare it), defined once the class is
+    class entity_living_base;
+    void on_jump(entity_living_base self, void (*original)(entity_living_base));
+
     // multiple inheritance, gets both groups plus its own
     JABA_CLASS_BEGIN(entity_living_base, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
 		JABA_METHOD(void, jump, "jump")
 		JABA_METHOD(void, set_sprinting, "setSprinting", jboolean)
+
+		JABA_HOOK(jump, on_jump)
     JABA_CLASS_END(entity_living_base)
+
+    void on_jump(const entity_living_base self, const entity_living_base::jump_mhk_original original)
+    {
+        LOG("jump called");
+
+        original(self);
+    }
 
     JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_living_base)
         JABA_FIELD(jboolean, on_ground, "onGround")
@@ -79,6 +94,10 @@ namespace
 		    { "onGround", "C" },
 		    { "theMinecraft", "S" },
         });
+
+        // the mappings have to be loaded before a hook can find its method, the flush in
+        // jaba::init found none and left the hooks queued
+        jaba::flush_queued_hooks();
 
         while (!GetAsyncKeyState(VK_DELETE))
         {
