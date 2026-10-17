@@ -18,8 +18,8 @@ namespace jaba
 		static jfieldID native();
 
 		// for static fields, obj is the declaring class
-		//[[nodiscard]] ValT get(object obj) const noexcept;
-		//void set(object obj, ValT val) noexcept;
+		[[nodiscard]] ValT get() const noexcept;
+		void set(ValT val) noexcept;
 	};
 }
 

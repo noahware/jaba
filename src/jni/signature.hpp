@@ -1,5 +1,6 @@
 #pragma once
 #include <format>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <jni/jni.h>
