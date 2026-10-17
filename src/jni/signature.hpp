@@ -40,5 +40,16 @@ namespace jaba
 
 			throw std::runtime_error("unknown type in signature");
 		}
+
+		// method descriptor, e.g. <jfloat, jint, entity> -> "(ILa/Entity;)F"
+		template <class RetT, class... ArgsT>
+		[[nodiscard]] std::string form_method()
+		{
+			std::string desc = "(";
+			((desc += form<ArgsT>()), ...);
+			desc += ')';
+			desc += form<RetT>();
+			return desc;
+		}
 	}
 }
