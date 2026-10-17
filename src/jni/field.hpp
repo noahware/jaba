@@ -8,7 +8,7 @@ namespace jaba
 {
 	class object;
 
-	template <class ClassT, fixed_string Mapping, class ValT>
+	template <class ClassT, fixed_string Mapping, class ValT, bool Static = false>
 	class field : public mapped<Mapping>, public obj_user
 	{
 	public:

@@ -30,8 +30,8 @@ namespace jaba
 		}
 	}
 
-	template <class ClassT, fixed_string Mapping, class ValT>
-	jfieldID field<ClassT, Mapping, ValT>::native()
+	template <class ClassT, fixed_string Mapping, class ValT, bool Static>
+	jfieldID field<ClassT, Mapping, ValT, Static>::native()
 	{
 		static const jfieldID id = [&]
 		{
@@ -39,33 +39,46 @@ namespace jaba
 			const zstring_view name = mapping();
 			const std::string desc = sig::form<ValT>();
 
-			return jni::env()->GetFieldID(cls, name.data(), desc.c_str());
+			if constexpr (Static)
+				return jni::env()->GetStaticFieldID(cls, name.data(), desc.c_str());
+			else
+				return jni::env()->GetFieldID(cls, name.data(), desc.c_str());
 		}();
 		return id;
 	}
 
-	template <class ClassT, fixed_string Mapping, class ValT>
-	ValT field<ClassT, Mapping, ValT>::get() const noexcept
+	template <class ClassT, fixed_string Mapping, class ValT, bool Static>
+	ValT field<ClassT, Mapping, ValT, Static>::get() const noexcept
 	{
 		JNIEnv* const env = jni::env();
-		const jobject self = obj_.obj();
 		const jfieldID id = native();
 
 #define JABA_GET(type, name) \
-		if constexpr (is_jni_type<ValT, type>) return detail::wrap<ValT>(env->Get##name##Field(self, id));
+		if constexpr (is_jni_type<ValT, type>) \
+		{ \
+			if constexpr (Static) \
+				return detail::wrap<ValT>(env->GetStatic##name##Field(ClassT::native(), id)); \
+			else \
+				return detail::wrap<ValT>(env->Get##name##Field(obj_.obj(), id)); \
+		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_GET)
 #undef JABA_GET
 	}
 
-	template <class ClassT, fixed_string Mapping, class ValT>
-	void field<ClassT, Mapping, ValT>::set(ValT val) noexcept
+	template <class ClassT, fixed_string Mapping, class ValT, bool Static>
+	void field<ClassT, Mapping, ValT, Static>::set(ValT val) noexcept
 	{
 		JNIEnv* const env = jni::env();
-		const jobject self = obj_.obj();
 		const jfieldID id = native();
 
 #define JABA_SET(type, name) \
-		if constexpr (is_jni_type<ValT, type>) env->Set##name##Field(self, id, detail::unwrap(val));
+		if constexpr (is_jni_type<ValT, type>) \
+		{ \
+			if constexpr (Static) \
+				env->SetStatic##name##Field(ClassT::native(), id, detail::unwrap(val)); \
+			else \
+				env->Set##name##Field(obj_.obj(), id, detail::unwrap(val)); \
+		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_SET)
 #undef JABA_SET
 	}
