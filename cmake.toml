@@ -15,7 +15,7 @@ endif()
 
 # force a reconfigure (and re-run of cmkr's glob) whenever a file is added to or removed
 # from src/, so new files get picked up without having to touch cmake.toml by hand
-file(GLOB_RECURSE JABA_SOURCE_GLOB_CHECK CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
+file(GLOB_RECURSE JABA_SOURCE_GLOB_CHECK CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl")
 """
 
 [find-package.JNI]
@@ -27,6 +27,7 @@ type = "shared"
 sources = [
     "src/**.cpp",
     "src/**.hpp",
+    "src/**.inl",
 ]
 windows.sources = [
     "src/hook/jaba_hk_stub.asm",
