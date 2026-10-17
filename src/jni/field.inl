@@ -45,8 +45,8 @@ namespace jaba
 			JNIEnv* const env = jni::env();
 
 			const jfieldID fid = is_static
-				? env->GetStaticFieldID(ClassT::native(), name.data(), desc.c_str())
-				: env->GetFieldID(ClassT::native(), name.data(), desc.c_str());
+				? env->GetStaticFieldID(cls(), name.data(), desc.c_str())
+				: env->GetFieldID(cls(), name.data(), desc.c_str());
 
 			if (!fid)
 			{
@@ -70,9 +70,9 @@ namespace jaba
 		if constexpr (is_jni_type<ValT, type>) \
 		{ \
 			if constexpr (is_static) \
-				return detail::wrap<ValT>(env->GetStatic##name##Field(ClassT::native(), id)); \
+				return detail::wrap<ValT>(env->GetStatic##name##Field(cls(), id)); \
 			else \
-				return detail::wrap<ValT>(env->Get##name##Field(self(), id)); \
+				return detail::wrap<ValT>(env->Get##name##Field(self(this), id)); \
 		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_GET)
 #undef JABA_GET
@@ -88,9 +88,9 @@ namespace jaba
 		if constexpr (is_jni_type<ValT, type>) \
 		{ \
 			if constexpr (is_static) \
-				env->SetStatic##name##Field(ClassT::native(), id, detail::unwrap(val)); \
+				env->SetStatic##name##Field(cls(), id, detail::unwrap(val)); \
 			else \
-				env->Set##name##Field(self(), id, detail::unwrap(val)); \
+				env->Set##name##Field(self(this), id, detail::unwrap(val)); \
 		}
 		JABA_FOREACH_JNI_TYPE_EX(JABA_SET)
 #undef JABA_SET
