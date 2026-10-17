@@ -23,7 +23,20 @@ namespace
         LOG("set angles called {} {}", yaw, pitch);
     }
 
-    JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP")
+    // two groups of Entity's fields, each its own members struct
+    JABA_CLASS_BEGIN(entity_pos, "net/minecraft/entity/Entity")
+        JABA_FIELD(jdouble, x, "posX")
+        JABA_FIELD(jdouble, y, "posY")
+        JABA_FIELD(jdouble, z, "posZ")
+    JABA_CLASS_END(entity_pos)
+
+    JABA_CLASS_BEGIN(entity_rot, "net/minecraft/entity/Entity")
+        JABA_FIELD(jfloat, yaw, "rotationYaw")
+        JABA_FIELD(jfloat, pitch, "rotationPitch")
+    JABA_CLASS_END(entity_rot)
+
+    // multiple inheritance, local_player gets both groups plus its own
+    JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
         JABA_FIELD(jboolean, on_ground, "onGround")
     JABA_CLASS_END(local_player)
 
@@ -52,6 +65,12 @@ namespace
         jaba::load_mappings({
     { "net/minecraft/client/Minecraft", "ave" },
     { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
+    { "net/minecraft/entity/Entity", "pk" },
+    { "posX", "s" },
+    { "posY", "t" },
+    { "posZ", "u" },
+    { "rotationYaw", "y" },
+    { "rotationPitch", "z" },
     { "thePlayer", "h" },
     { "onGround", "C" },
     { "theMinecraft", "S" },
@@ -61,9 +80,14 @@ namespace
         {
             try
             {
-                const bool on_ground = minecraft::mc->player->on_ground;
+                const local_player player = minecraft::mc->player;
 
-                LOG("on ground {}", on_ground);
+                // x/y/z come from entity_pos_members, yaw/pitch from entity_rot_members
+                const double x = player.x, y = player.y, z = player.z;
+                const float yaw = player.yaw, pitch = player.pitch;
+                const bool on_ground = player.on_ground;
+
+                LOG("pos {:.2f} {:.2f} {:.2f} rot {:.1f} {:.1f} on ground {}", x, y, z, yaw, pitch, on_ground);
             }
             catch (const std::exception& e)
             {

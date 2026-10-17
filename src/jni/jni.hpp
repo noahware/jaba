@@ -5,15 +5,15 @@
 
 namespace jaba
 {
-	// the members templates a class inherits, none is fine:
+	// the classes whose fields a class inherits, none is fine:
 	//   JABA_CLASS_BEGIN(entity, "...")
-	//   JABA_CLASS_BEGIN(living, "...", entity_members)
-	//   JABA_CLASS_BEGIN(player, "...", living_members, other_members)
-	template <template <class> class... Bs>
+	//   JABA_CLASS_BEGIN(living, "...", entity)
+	//   JABA_CLASS_BEGIN(player, "...", living, other)
+	template <class... Ts>
 	struct bases
 	{
 		template <class Self>
-		struct apply : Bs<Self>... { };
+		struct apply : Ts::template members<Self>... { };
 	};
 }
 
@@ -47,4 +47,6 @@ namespace jaba
 	{ \
 	public: \
 		using clazz::clazz; \
+		template <class Self> \
+		using members = name##_members<Self>; \
 	};
