@@ -17,6 +17,11 @@ namespace jaba
 		obj_user(object obj) noexcept
 			:	obj_(std::move(obj)) { }
 
+		[[nodiscard]] operator object() const noexcept
+		{
+			return obj_;
+		}
+
 		[[nodiscard]] object obj() const noexcept
 		{
 			return obj_;
