@@ -27,7 +27,7 @@ namespace
     // the detour has to be declared before JABA_HOOK names it, the class is only forward
 // declared here (complete types aren't needed to declare it), defined once the class is
     class entity_living_base;
-    void on_jump(entity_living_base self, void (*original)(entity_living_base));
+    void on_jump(const entity_living_base& self, void (*original)(const entity_living_base&));
 
     // two groups of Entity's fields, each its own members struct
     JABA_CLASS_BEGIN(entity_pos, "net/minecraft/entity/Entity")
@@ -49,7 +49,7 @@ namespace
 		JABA_HOOK(jump, on_jump)
     JABA_CLASS_END(entity_living_base)
 
-    void on_jump(const entity_living_base self, const entity_living_base::jump_mhk_original original)
+    void on_jump(const entity_living_base& self, const entity_living_base::jump_mhk_original original)
     {
         LOG("jump called");
 

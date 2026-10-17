@@ -53,7 +53,7 @@ namespace jaba
 	}
 
 	template <class ValT, class ClassT, fixed_string Mapping, class Loc>
-	void field<ValT, ClassT, Mapping, Loc>::set(ValT val)
+	void field<ValT, ClassT, Mapping, Loc>::set(const ValT& val)
 	{
 		JNIEnv* const env = jni::env();
 		const jfieldID id = native();

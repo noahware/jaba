@@ -43,7 +43,7 @@ namespace jaba
 
 	namespace detail
 	{
-		// raw jni value -> ValT (clazz types get wrapped in an object)
+		// raw jni value -> ValT, a clazz type takes ownership of the local ref (a call or field result)
 		template <class V, class R>
 		[[nodiscard]] V wrap(const R raw)
 		{
@@ -56,6 +56,19 @@ namespace jaba
 			}
 		}
 
+		// same for a ref we were handed (a detour's args), copied so the object owns its own
+		template <class V, class R>
+		[[nodiscard]] V wrap_copy(const R raw)
+		{
+			if constexpr (std::is_same_v<V, R>)
+				return raw;
+			else
+			{
+				static_assert(std::is_constructible_v<V, jobject>, "add 'using clazz::clazz;' to this class");
+				return V{ jni::env()->NewLocalRef(raw) };
+			}
+		}
+
 		// ValT -> raw jni value
 		template <class V>
 		[[nodiscard]] auto unwrap(const V& val) noexcept
@@ -64,6 +77,16 @@ namespace jaba
 				return val;
 			else
 				return val.obj();
+		}
+
+		// ValT -> what a native method returns, the jvm's frame takes over the ref
+		template <class V>
+		[[nodiscard]] auto unwrap_ret(V&& val)
+		{
+			if constexpr (std::is_arithmetic_v<std::remove_cvref_t<V>>)
+				return val;
+			else
+				return val.release();
 		}
 	}
 }

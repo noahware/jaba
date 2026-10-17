@@ -34,19 +34,19 @@ namespace jaba
 		using ret_t = RetT;
 
 		// the method itself, what a detour calls to run the real one: self comes first unless static
-		using sig_t = std::conditional_t<is_static, RetT(ArgsT...), RetT(ClassT, ArgsT...)>;
+		using sig_t = std::conditional_t<is_static, RetT(const ArgsT&...), RetT(const ClassT&, const ArgsT&...)>;
 
 		// the signature a hook of this method has to have, the original goes after self
 		using detour_t = std::conditional_t<is_static,
-			RetT (*)(sig_t*, ArgsT...),
-			RetT (*)(ClassT, sig_t*, ArgsT...)>;
+			RetT (*)(sig_t*, const ArgsT&...),
+			RetT (*)(const ClassT&, sig_t*, const ArgsT&...)>;
 
 		[[nodiscard]] static jmethodID native();
 
-		RetT operator()(ArgsT... args) const;
+		RetT operator()(const ArgsT&... args) const;
 
 		// calls id on target (the instance, or the class when static), throws if java does
-		static RetT invoke(JNIEnv* env, jmethodID id, jobject target, ArgsT... args);
+		static RetT invoke(JNIEnv* env, jmethodID id, jobject target, const ArgsT&... args);
 
 	private:
 		using member::cls;
@@ -62,17 +62,20 @@ namespace jaba
 		{
 			static inline jmethodID orig_id = nullptr;
 
-			static RetT call_original(ClassT self, ArgsT... args)
+			static RetT call_original(const ClassT& self, const ArgsT&... args)
 			{
 				return invoke(jni::env(), orig_id, self.obj(), args...);
 			}
 
-			static detail::raw_t<RetT> entry(JNIEnv*, jobject self, detail::raw_t<ArgsT>... args)
+			static detail::raw_t<RetT> entry(JNIEnv* env, jobject self, detail::raw_t<ArgsT>... args)
 			{
+				// self and the args are the jvm frame's refs, so the objects get copies of their own
+				const ClassT self_obj{ env->NewLocalRef(self) };
+
 				if constexpr (std::is_void_v<RetT>)
-					Detour(ClassT{ self }, &call_original, detail::wrap<ArgsT>(args)...);
+					Detour(self_obj, &call_original, detail::wrap_copy<ArgsT>(args)...);
 				else
-					return detail::unwrap(Detour(ClassT{ self }, &call_original, detail::wrap<ArgsT>(args)...));
+					return detail::unwrap_ret(Detour(self_obj, &call_original, detail::wrap_copy<ArgsT>(args)...));
 			}
 		};
 
@@ -81,7 +84,7 @@ namespace jaba
 		{
 			static inline jmethodID orig_id = nullptr;
 
-			static RetT call_original(ArgsT... args)
+			static RetT call_original(const ArgsT&... args)
 			{
 				return invoke(jni::env(), orig_id, ClassT::native(), args...);
 			}
@@ -89,9 +92,9 @@ namespace jaba
 			static detail::raw_t<RetT> entry(JNIEnv*, jobject, detail::raw_t<ArgsT>... args)
 			{
 				if constexpr (std::is_void_v<RetT>)
-					Detour(&call_original, detail::wrap<ArgsT>(args)...);
+					Detour(&call_original, detail::wrap_copy<ArgsT>(args)...);
 				else
-					return detail::unwrap(Detour(&call_original, detail::wrap<ArgsT>(args)...));
+					return detail::unwrap_ret(Detour(&call_original, detail::wrap_copy<ArgsT>(args)...));
 			}
 		};
 

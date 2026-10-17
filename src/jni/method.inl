@@ -37,7 +37,7 @@ namespace jaba
 	}
 
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
-	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::invoke(JNIEnv* const env, const jmethodID id, const jobject target, ArgsT... args)
+	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::invoke(JNIEnv* const env, const jmethodID id, const jobject target, const ArgsT&... args)
 	{
 		// has to run right after the call, before the result is wrapped
 		const auto check = [env]
@@ -80,7 +80,7 @@ namespace jaba
 	}
 
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
-	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::operator()(ArgsT... args) const
+	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::operator()(const ArgsT&... args) const
 	{
 		const jobject target = [&]
 		{

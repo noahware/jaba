@@ -20,14 +20,14 @@ namespace jaba
 		[[nodiscard]] static jfieldID native();
 
 		[[nodiscard]] ValT get() const;
-		void set(ValT val);
+		void set(const ValT& val);
 
 		[[nodiscard]] operator ValT() const
 		{
 			return get();
 		}
 
-		field& operator=(ValT val)
+		field& operator=(const ValT& val)
 		{
 			set(val);
 			return *this;
