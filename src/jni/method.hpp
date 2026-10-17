@@ -24,11 +24,6 @@ namespace jaba
 	private:
 		using member::cls;
 		using member::self;
-
-		[[nodiscard]] jobject self() const noexcept
-		{
-			return Loc::owner(this).obj();
-		}
 	};
 
 	template <class ClassT, fixed_string Mapping, class RetT, class... ArgsT>

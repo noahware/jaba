@@ -38,6 +38,7 @@ namespace
     // multiple inheritance, gets both groups plus its own
     JABA_CLASS_BEGIN(entity_living_base, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, entity_rot)
 		JABA_METHOD(void, jump, "jump")
+		JABA_METHOD(void, set_sprinting, "setSprinting", jboolean)
     JABA_CLASS_END(entity_living_base)
 
     JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_living_base)
@@ -54,9 +55,6 @@ namespace
         util::log::init();
         java::init();
 
-        //const jaba::clazz mc = jaba::find_class("net/le/minecraft");
-        //const jaba::field field = mc.find_static_field<jint>("", "");
-
         if (!jaba::init())
         {
             LOG("failed to init jaba");
@@ -67,19 +65,20 @@ namespace
         }
 
         jaba::load_mappings({
-    { "net/minecraft/client/Minecraft", "ave" },
-    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
-    { "net/minecraft/entity/Entity", "pk" },
-    { "posX", "s" },
-    { "posY", "t" },
-    { "posZ", "u" },
-    { "jump", "bF" },
-    { "rotationYaw", "y" },
-    { "rotationPitch", "z" },
-    { "thePlayer", "h" },
-    { "onGround", "C" },
-    { "theMinecraft", "S" },
-            });
+		    { "net/minecraft/client/Minecraft", "ave" },
+		    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
+		    { "net/minecraft/entity/Entity", "pk" },
+		    { "posX", "s" },
+		    { "posY", "t" },
+		    { "posZ", "u" },
+		    { "jump", "bF" },
+		    { "rotationYaw", "y" },
+		    { "rotationPitch", "z" },
+		    { "thePlayer", "h" },
+		    { "setSprinting", "d" },
+		    { "onGround", "C" },
+		    { "theMinecraft", "S" },
+        });
 
         while (!GetAsyncKeyState(VK_DELETE))
         {
@@ -87,7 +86,7 @@ namespace
             {
                 const local_player player = minecraft::mc->player;
 
-                player.jump();
+                player.set_sprinting(true);
 
                 // x/y/z come from entity_pos_members, yaw/pitch from entity_rot_members
                 const double x = player.x, y = player.y, z = player.z;

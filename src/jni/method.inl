@@ -1,4 +1,6 @@
 #pragma once
+#include <format>
+#include <stdexcept>
 #include "method.hpp"
 #include "clazz.hpp"
 #include "env.hpp"
@@ -42,10 +44,10 @@ namespace jaba
 
 		if constexpr (std::is_void_v<RetT>)
 		{
-			if constexpr (is_static) \
-				env->CallStaticVoidMethod(cls(), id, args...);
+			if constexpr (is_static)
+				env->CallStaticVoidMethod(cls(), id, detail::unwrap(args)...);
 			else
-				env->CallVoidMethod(self(this), id, args...);
+				env->CallVoidMethod(self(this), id, detail::unwrap(args)...);
 		}
 		else
 		{
@@ -53,12 +55,12 @@ namespace jaba
 			if constexpr (is_jni_type<RetT, type>) \
 			{ \
 				if constexpr (is_static) \
-					return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, args...)); \
+					return detail::wrap<RetT>(env->CallStatic##name##Method(cls(), id, detail::unwrap(args)...)); \
 				else \
-					return detail::wrap<RetT>(env->Call##name##Method(self(this), id, args...)); \
+					return detail::wrap<RetT>(env->Call##name##Method(self(this), id, detail::unwrap(args)...)); \
 			}
 			JABA_FOREACH_JNI_TYPE_EX(JABA_CALL_MID)
-		}
 #undef JABA_CALL_MID
+		}
 	}
 }
