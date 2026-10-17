@@ -1,4 +1,7 @@
 #pragma once
+#include <util/fixed_string.hpp>
+
+#include "mapping.hpp"
 
 namespace jaba
 {
@@ -20,5 +23,15 @@ namespace jaba
 
 	protected:
 		value_type obj_;
+	};
+
+	template <fixed_string Mapping>
+	class mapped
+	{
+	public:
+		[[nodiscard]] static std::string_view mapping() noexcept
+		{
+			return fetch_mapping(Mapping);
+		}
 	};
 }
