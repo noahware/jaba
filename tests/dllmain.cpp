@@ -3,6 +3,7 @@
 #include "jaba.hpp"
 #include "hook/hook.hpp"
 #include "java/java.hpp"
+#include "jni/jni.hpp"
 #include "util/image.hpp"
 #include "util/log.hpp"
 
@@ -22,10 +23,22 @@ namespace
         LOG("set angles called {} {}", yaw, pitch);
     }
 
+    JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP")
+        JABA_FIELD(jboolean, on_ground, "onGround")
+    JABA_CLASS_END(local_player)
+
+    JABA_CLASS_BEGIN(minecraft, "net/minecraft/client/Minecraft")
+        JABA_STATIC_FIELD(minecraft, mc, "theMinecraft")
+        JABA_FIELD(local_player, player, "thePlayer")
+    JABA_CLASS_END(minecraft)
+
 	[[noreturn]] void thread_entry(const HMODULE mod)
 	{
         util::log::init();
         java::init();
+
+        //const jaba::clazz mc = jaba::find_class("net/le/minecraft");
+        //const jaba::field field = mc.find_static_field<jint>("", "");
 
         if (!jaba::init())
         {
@@ -36,7 +49,31 @@ namespace
             FreeLibraryAndExitThread(mod, 0);
         }
 
-        const auto set_angles = set_angles_method();
+        jaba::load_mappings({
+    { "net/minecraft/client/Minecraft", "ave" },
+    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
+    { "thePlayer", "h" },
+    { "onGround", "C" },
+    { "theMinecraft", "S" },
+            });
+
+        while (!GetAsyncKeyState(VK_DELETE))
+        {
+            try
+            {
+                const bool on_ground = minecraft::mc->player->on_ground;
+
+                LOG("on ground {}", on_ground);
+            }
+            catch (const std::exception& e)
+            {
+                LOG("caught excp: {}", e.what());
+            }
+
+            Sleep(15);
+        }
+
+        /*const auto set_angles = set_angles_method();
 
         orig_set_angles = jaba::hook_method(set_angles, set_angles_detour).value_or(nullptr);
 
@@ -45,7 +82,7 @@ namespace
 
         Sleep(3000);
 
-        jaba::unhook_method(set_angles);
+        jaba::unhook_method(set_angles);*/
 
         util::log::reset();
 
