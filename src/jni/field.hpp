@@ -1,18 +1,21 @@
 #pragma once
 #include <jni/jni.h>
-#include "env.hpp"
+#include "clazz_fwd.hpp"
+#include "object.hpp"
 #include "wrap.hpp"
-#include "util/zstring_view.hpp"
 
 namespace jaba
 {
 	class object;
 
 	template <class_type ClassT, fixed_string Mapping, class ValT>
-	class field : public mapped<Mapping>
+	class field : public mapped<Mapping>, public obj_user
 	{
 	public:
-		static jfieldID resolve(zstring_view sig, bool is_static);
+		using mapped<Mapping>::mapping;
+		using obj_user::obj_user;
+
+		static jfieldID native();
 
 		// for static fields, obj is the declaring class
 		//[[nodiscard]] ValT get(object obj) const noexcept;
