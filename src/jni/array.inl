@@ -44,4 +44,11 @@ namespace jaba
 		if constexpr (is_jni_type<T, clazz_any>)
 			env->SetObjectArrayElement(reinterpret_cast<jobjectArray>(obj_), idx, detail::unwrap(val));
 	}
+
+	template <class T>
+	auto array<T>::view() const
+	{
+		return std::views::iota(std::size_t{ 0 }, size())
+			| std::views::transform([this](const std::size_t i) { return get(i); });
+	}
 }

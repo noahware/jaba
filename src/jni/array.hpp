@@ -1,4 +1,6 @@
 #pragma once
+#include <cstddef>
+#include <ranges>
 #include "object.hpp"
 #include "env.hpp"
 
@@ -12,6 +14,9 @@ namespace jaba
 
 		T get(std::size_t i) const noexcept;
 		void set(std::size_t i, const T& val) const noexcept;
+
+		// lazy range of the elements, each get() is one jni call. the array must outlive it
+		[[nodiscard]] auto view() const;
 
 		[[nodiscard]] std::size_t size() const noexcept
 		{
