@@ -1,5 +1,6 @@
 #pragma once
 #include <concepts>
+#include <optional>
 #include <utility>
 #include <jni/jni.h>
 #include "env.hpp"
@@ -77,6 +78,31 @@ namespace jaba
 		[[nodiscard]] bool instance_of() const
 		{
 			return obj_ && jni::env()->IsInstanceOf(obj_, T::native()) == JNI_TRUE;
+		}
+
+		// same java object seen as another clazz<> type, no check (a wrong guess is a jvm crash
+		// the moment you touch a member), the lvalue form takes its own ref, the rvalue form steals
+		template <std::derived_from<object> T>
+		[[nodiscard]] T as() const &
+		{
+			return T{ obj_ ? copy_ref() : nullptr, ref_ };
+		}
+
+		template <std::derived_from<object> T>
+		[[nodiscard]] T as() &&
+		{
+			return T{ release(), ref_ };
+		}
+
+		// the checked cast, nullopt when it isn't an instance of T (or is null)
+		template <class T>
+			requires requires { { T::native() } -> std::same_as<jclass>; }
+		[[nodiscard]] std::optional<T> try_as() const
+		{
+			if (!instance_of<T>())
+				return std::nullopt;
+
+			return as<T>();
 		}
 
 		[[nodiscard]] bool is_local() const noexcept
