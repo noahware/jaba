@@ -76,5 +76,9 @@ namespace jaba
 		using clazz::clazz; \
 		template <class Self> \
 		using members = name##_members<Self>; \
+		[[nodiscard]] name as_global() const noexcept\
+		{\
+			return name{ as_global_obj() };\
+		}\
 	}; \
 	template struct name##_members<name>;

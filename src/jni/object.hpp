@@ -94,7 +94,7 @@ namespace jaba
 			return ref_;
 		}
 
-		[[nodiscard]] object as_global() const noexcept
+		[[nodiscard]] object as_global_obj() const noexcept
 		{
 			return object{ jni::env()->NewGlobalRef(obj_), ref_t::global };
 		}
