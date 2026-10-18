@@ -81,7 +81,7 @@ namespace jaba
 
 		[[nodiscard]] bool is_local() const noexcept
 		{
-			return ref_ == ref_t::global;
+			return ref_ == ref_t::local;
 		}
 
 		[[nodiscard]] bool is_global() const noexcept
