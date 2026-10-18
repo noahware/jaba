@@ -21,10 +21,102 @@ You can either use the integrated JNI interface and define hooks from there, or 
 
 ## JNI integration
 ### Defining classes
+
+```cpp
+JABA_CLASS_BEGIN(minecraft, "net/minecraft/client/Minecraft")
+JABA_CLASS_END(minecraft)
+```
+
+Classes can inherit from other defined classes (including multiple), gaining all of their fields and methods:
+
+```cpp
+JABA_CLASS_BEGIN(entity_pos, "net/minecraft/entity/Entity")
+    JABA_FIELD(jdouble, x, "posX")
+    JABA_FIELD(jdouble, y, "posY")
+    JABA_FIELD(jdouble, z, "posZ")
+JABA_CLASS_END(entity_pos)
+
+JABA_CLASS_BEGIN(living_base, "net/minecraft/entity/EntityLivingBase")
+    JABA_FIELD(jint, hurt_time, "hurtTime")
+    JABA_FIELD(jfloat, move_forward, "moveForward")
+JABA_CLASS_END(living_base)
+
+JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, living_base)
+JABA_CLASS_END(local_player)
+```
+
 ### Fields
+
+```cpp
+JABA_CLASS_BEGIN(local_player, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, living_base)
+    JABA_FIELD(jboolean, on_ground, "onGround")
+JABA_CLASS_END(local_player)
+
+JABA_CLASS_BEGIN(minecraft, "net/minecraft/client/Minecraft")
+    JABA_STATIC_FIELD(minecraft, mc, "theMinecraft")
+    JABA_FIELD(local_player, player, "thePlayer")
+JABA_CLASS_END(minecraft)
+
+const local_player player = minecraft::mc->player;
+
+const double x = player.x;
+const int hurt_time = player.hurt_time;
+const bool on_ground = player.on_ground;
+```
+
 ### Methods
+
+```cpp
+JABA_CLASS_BEGIN(player_class, "net/minecraft/client/entity/EntityPlayerSP")
+    JABA_METHOD(void, set_sprinting, "setSprinting", jboolean)
+    JABA_METHOD(void, jump, "jump")
+JABA_CLASS_END(player_class)
+
+player.set_sprinting(true);
+player.jump();
+```
+
 ### Integrated hooks
+
+`JABA_HOOK` takes the name of a method defined in the class and a detour. The detour receives the instance followed by the original method's arguments, and the original is available as `<method>_mhk_original`:
+
+```cpp
+class entity_living_base;
+void on_jump(const entity_living_base& self, void (*original)(const entity_living_base&));
+
+JABA_CLASS_BEGIN(entity_living_base, "net/minecraft/client/entity/EntityPlayerSP", entity_pos, living_base)
+    JABA_METHOD(void, jump, "jump")
+    JABA_HOOK(jump, on_jump)
+JABA_CLASS_END(entity_living_base)
+
+void on_jump(const entity_living_base& self, const entity_living_base::jump_mhk_original original)
+{
+    LOG("jump called");
+
+    original(self);
+}
+```
+
+Hooks that could not find their method (e.g. mappings not loaded yet) are queued, and can be placed with `jaba::flush_queued_hooks`:
+
+```cpp
+jaba::flush_queued_hooks();
+```
+
 ### Mappings
+
+Classes, fields and methods are defined by their unobfuscated names, `jaba::load_mappings` maps them to the obfuscated names:
+
+```cpp
+jaba::load_mappings({
+    { "net/minecraft/client/Minecraft", "ave" },
+    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
+    { "net/minecraft/entity/Entity", "pk" },
+    { "posX", "s" },
+    { "jump", "bF" },
+    { "thePlayer", "h" },
+});
+```
 
 ## Standalone hooks
 ### Detours
