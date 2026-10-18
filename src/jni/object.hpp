@@ -80,6 +80,13 @@ namespace jaba
 			return obj_ && jni::env()->IsInstanceOf(obj_, T::native()) == JNI_TRUE;
 		}
 
+		template <class T>
+			requires requires { { T::native() } -> std::same_as<jclass>; }
+		[[nodiscard]] bool is() const
+		{
+			return instance_of<T>();
+		}
+
 		// same java object seen as another clazz<> type, no check (a wrong guess is a jvm crash
 		// the moment you touch a member), the lvalue form takes its own ref, the rvalue form steals
 		template <std::derived_from<object> T>
