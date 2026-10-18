@@ -120,6 +120,26 @@ jaba::load_mappings({
 });
 ```
 
+### Class loader
+
+Classes are looked up once (on first use) with `JNIEnv::FindClass` and cached as a global ref.
+
+`jaba::set_find_class_fn` replaces the lookup. It takes a `jclass(*)(zstring_view)` that receives the (mapped) class name and returns the class, or `nullptr` if it could not be found (Jaba then throws `unable to find class '<name>'`).
+
+```cpp
+// the default one already does FindClass, so here use a classloader or something
+jclass find_class_replacement(const jaba::zstring_view name)
+{
+    JNIEnv* const env = jaba::jni::env();
+
+    return env->FindClass(name.data());
+}
+
+jaba::set_find_class_fn(find_class_replacement);
+```
+
+Set it before any class is first used, as the result of the lookup is cached for the lifetime of the program.
+
 ## Standalone hooks
 ### Detours
 
