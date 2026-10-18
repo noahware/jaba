@@ -7,27 +7,35 @@
 
 namespace jaba
 {
-	// Owns a local ref: the constructor takes the one it is given, a copy makes a new one, and
-	// the destructor deletes it. Local refs belong to the thread that made them, so an object
-	// must not leave it.
 	class object : public jni_wrap<jobject>
 	{
 	public:
+		enum class ref_t : std::uint8_t
+		{
+			local,
+			global
+		};
+
 		object() noexcept = default;
 
-		explicit object(const jobject obj) noexcept
-			: jni_wrap(obj) { }
+		explicit object(const jobject obj, const ref_t ref = ref_t::local) noexcept
+			:	jni_wrap(obj),
+				ref_(ref) { }
 
 		object(const object& other)
-			: jni_wrap(other.obj_ ? jni::env()->NewLocalRef(other.obj_) : nullptr) { }
+			:	jni_wrap(other.obj_ ? other.copy_ref() : nullptr),
+				ref_(other.ref_) { }
 
 		object(object&& other) noexcept
-			: jni_wrap(std::exchange(other.obj_, nullptr)) { }
+			:	jni_wrap(std::exchange(other.obj_, nullptr)),
+				ref_(other.ref_) { }
 
 		// by value so it is both the copy and the move assignment
 		object& operator=(object other) noexcept
 		{
 			std::swap(obj_, other.obj_);
+			std::swap(ref_, other.ref_);
+
 			return *this;
 		}
 
@@ -42,7 +50,12 @@ namespace jaba
 				return;
 
 			if (JNIEnv* const env = jni::env())
-				env->DeleteLocalRef(obj_);
+			{
+				if (ref_ == ref_t::local)
+					env->DeleteLocalRef(obj_);
+				else
+					env->DeleteGlobalRef(obj_);
+			}
 
 			obj_ = nullptr;
 		}
@@ -65,5 +78,37 @@ namespace jaba
 		{
 			return obj_ && jni::env()->IsInstanceOf(obj_, T::native()) == JNI_TRUE;
 		}
+
+		[[nodiscard]] bool is_local() const noexcept
+		{
+			return ref_ == ref_t::global;
+		}
+
+		[[nodiscard]] bool is_global() const noexcept
+		{
+			return ref_ == ref_t::global;
+		}
+
+		[[nodiscard]] ref_t ref() const noexcept
+		{
+			return ref_;
+		}
+
+		[[nodiscard]] object as_global() const noexcept
+		{
+			return object{ jni::env()->NewGlobalRef(obj_), ref_t::global };
+		}
+
+	protected:
+		[[nodiscard]] jobject copy_ref() const noexcept
+		{
+			const auto env = jni::env();
+
+			return ref_ == ref_t::local ?
+				env->NewLocalRef(obj_) :
+				env->NewGlobalRef(obj_);
+		}
+
+		ref_t ref_;
 	};
 }
