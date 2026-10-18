@@ -103,6 +103,8 @@ Hooks that could not find their method (e.g. mappings not loaded yet) are queued
 jaba::flush_queued_hooks();
 ```
 
+You should call `jaba::flush_queued_hooks` once mappings are loaded and Jaba is initialized.
+
 ### Mappings
 
 Classes, fields and methods are defined by their unobfuscated names, `jaba::load_mappings` maps them to the obfuscated names:
