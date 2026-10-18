@@ -78,7 +78,9 @@ namespace jaba
 		using members = name##_members<Self>; \
 		[[nodiscard]] name as_global() const noexcept\
 		{\
-			return name{ as_global_obj() };\
+			object global = as_global_obj();\
+			const ref_t ref = global.ref();\
+			return name{ global.release(), ref };\
 		}\
 	}; \
 	template struct name##_members<name>;

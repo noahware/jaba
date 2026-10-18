@@ -109,6 +109,6 @@ namespace jaba
 				env->NewGlobalRef(obj_);
 		}
 
-		ref_t ref_;
+		ref_t ref_ = ref_t::local;
 	};
 }
