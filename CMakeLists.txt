@@ -52,6 +52,7 @@ set(jaba_SOURCES
 	"src/hook/pending.inl"
 	"src/jaba.cpp"
 	"src/jaba.hpp"
+	"src/jni/array.hpp"
 	"src/jni/clazz.cpp"
 	"src/jni/clazz.hpp"
 	"src/jni/env.cpp"
