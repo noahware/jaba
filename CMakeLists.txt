@@ -53,6 +53,7 @@ set(jaba_SOURCES
 	"src/jaba.cpp"
 	"src/jaba.hpp"
 	"src/jni/array.hpp"
+	"src/jni/array.inl"
 	"src/jni/clazz.cpp"
 	"src/jni/clazz.hpp"
 	"src/jni/env.cpp"

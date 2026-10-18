@@ -10,6 +10,9 @@ namespace jaba
 	public:
 		using object::object;
 
+		T get(std::size_t i) const noexcept;
+		void set(std::size_t i, const T& val) const noexcept;
+
 		[[nodiscard]] std::size_t size() const noexcept
 		{
 			return jni::env()->GetArrayLength(native());
@@ -22,3 +25,5 @@ namespace jaba
 		}
 	};
 }
+
+#include "array.inl"
