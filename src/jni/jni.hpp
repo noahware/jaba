@@ -58,6 +58,11 @@ namespace jaba
 #define JABA_STATIC_METHOD(ret, name, mapping, ...) \
 		inline static jaba::static_method<jaba_self, mapping, ret __VA_OPT__(,) __VA_ARGS__> name;
 
+// argument types follow the name, none is fine, calling it gives back the new instance:
+//   JABA_CONSTRUCTOR(create, jint, jint)
+#define JABA_CONSTRUCTOR(name, ...) \
+		JABA_STATIC_METHOD(jaba_self, name, "<init>" __VA_OPT__(,) __VA_ARGS__)
+
 // hooks a method declared above it, the detour is a function declared before the class
 // (qualify it if it's in another namespace):
 //   JABA_METHOD(void, set_pos, "setPosition", jdouble, jdouble, jdouble)

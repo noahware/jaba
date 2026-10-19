@@ -16,11 +16,15 @@ namespace jaba
 		static const jmethodID id = []
 		{
 			const zstring_view name = mapping();
-			const std::string desc = sig::form_method<RetT, ArgsT...>();
+			// a constructor's RetT is the class it builds, but its descriptor always ends in V
+			const std::string desc = is_constructor()
+				? sig::form_method<void, ArgsT...>()
+				: sig::form_method<RetT, ArgsT...>();
 
 			JNIEnv* const env = jni::env();
 
-			const jmethodID mid = is_static
+			// <init> is looked up with GetMethodID even though the wrapper is static
+			const jmethodID mid = is_static && !is_constructor()
 				? env->GetStaticMethodID(ClassT::native(), name.data(), desc.c_str())
 				: env->GetMethodID(ClassT::native(), name.data(), desc.c_str());
 
@@ -50,7 +54,13 @@ namespace jaba
 			}
 		};
 
-		if constexpr (std::is_void_v<RetT>)
+		if constexpr (is_constructor())
+		{
+			const jobject created = env->NewObject(static_cast<jclass>(target), id, detail::unwrap(args)...);
+			check();
+			return detail::wrap<RetT>(created);
+		}
+		else if constexpr (std::is_void_v<RetT>)
 		{
 			if constexpr (is_static)
 				env->CallStaticVoidMethod(static_cast<jclass>(target), id, detail::unwrap(args)...);

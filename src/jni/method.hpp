@@ -52,6 +52,11 @@ namespace jaba
 		using member::cls;
 		using member::self;
 
+		static constexpr bool is_constructor() noexcept
+		{
+			return Mapping.view() == "<init>";
+		}
+
 		// what jaba_hk_stub calls: the raw native entry, it wraps everything up for Detour.
 		// orig_id is what hook_method returned, and call_original runs it
 		template <bool Static, detour_t Detour>
@@ -118,7 +123,7 @@ namespace jaba
 	using method_in_t = typename method_in<M, NewClassT>::type;
 
 	template <class ClassT, fixed_string Mapping, class RetT, class... ArgsT>
-	using static_method =method<ClassT, Mapping, static_loc, RetT, ArgsT...>;
+	using static_method = method<ClassT, Mapping, static_loc, RetT, ArgsT...>;
 }
 
 #include "method.inl"
