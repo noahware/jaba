@@ -64,6 +64,14 @@ const int hurt_time = player.hurt_time;
 const bool on_ground = player.on_ground;
 ```
 
+A field can be assigned to, as long as the object is not `const`:
+
+```cpp
+local_player player = minecraft::mc->player;
+
+player.on_ground = true;
+```
+
 ### Methods
 
 ```cpp
@@ -74,6 +82,16 @@ JABA_CLASS_END(player_class)
 
 player.set_sprinting(true);
 player.jump();
+```
+
+`JABA_STATIC_METHOD` is the same without an instance, it is called on the class:
+
+```cpp
+JABA_CLASS_BEGIN(minecraft, "net/minecraft/client/Minecraft")
+    JABA_STATIC_METHOD(jint, get_debug_fps, "getDebugFPS")
+JABA_CLASS_END(minecraft)
+
+const int fps = minecraft::get_debug_fps();
 ```
 
 ### Integrated hooks
@@ -151,6 +169,72 @@ JABA_CLASS_BEGIN(vec3, "net/minecraft/util/Vec3")
 JABA_CLASS_END(vec3)
 
 const vec3 vec = vec3::create(1.0, 2.0, 3.0);
+```
+
+### Arrays
+
+`jaba::jni::array<T>` is a Java array. `T` is a JNI primitive (`jint`, `jdouble`, ...), a class, or another array. It can be a field, an argument or a return type:
+
+```cpp
+JABA_CLASS_BEGIN(item_stack, "net/minecraft/item/ItemStack")
+JABA_CLASS_END(item_stack)
+
+JABA_CLASS_BEGIN(inventory, "net/minecraft/entity/player/InventoryPlayer")
+    JABA_FIELD(jaba::jni::array<item_stack>, main_inventory, "mainInventory")
+JABA_CLASS_END(inventory)
+
+const jaba::jni::array<item_stack> items = inv.main_inventory;
+
+const size_t size = items.size();
+const item_stack first = items.get(0);
+
+items.set(1, first);
+```
+
+`[]` reads and writes an element the same way, and it works on arrays of arrays too:
+
+```cpp
+jaba::jni::array<jint> heights = ...;
+
+heights[0] = 64;
+const int height = heights[0];
+
+grid[1][2] = 0.5;
+```
+
+`view` is a lazy range of the elements, every element is one JNI call:
+
+```cpp
+jint total = 0;
+
+for (const jint height : heights.view())
+    total += height;
+```
+
+An index outside of the array throws a `std::out_of_range`, and a null array is empty. Arrays are created with `create`, the elements start as zero or null (`T` can not be an array here):
+
+```cpp
+jaba::jni::array<jint> heights = jaba::jni::array<jint>::create(16);
+
+heights.set(0, 64);
+```
+
+### References
+
+A class holds a JNI reference and deletes it when it is destroyed, a copy makes a reference of its own. These are local references, which are only valid on the thread they were made on. To keep an object around (in a global, or to use it on another thread) make it global with `as_global`:
+
+```cpp
+const local_player player = minecraft::mc->player;
+
+saved_player = player.as_global();
+```
+
+`is_global` and `is_local` tell which one it is.
+
+`release` gives the reference up without deleting it, to return an object from a native method, and `reset` deletes it early. A class made from a raw `jobject` takes ownership of the reference, so give it a copy if the reference is not yours:
+
+```cpp
+const local_player player{ env->NewLocalRef(obj) };
 ```
 
 ## Java SDK
