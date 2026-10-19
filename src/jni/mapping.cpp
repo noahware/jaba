@@ -19,7 +19,7 @@ jaba::zstring_view jaba::jni::fetch_mapping(const zstring_view unobf_name)
 	const auto it = mappings.find(unobf_name);
 
 	if (it == mappings.end())
-		throw std::runtime_error(std::format("unable to find mapping '{}'", unobf_name));
+		throw std::runtime_error(std::format("unable to find mapping '{}'", std::string_view{ unobf_name }));
 
 	return it->second;
 }

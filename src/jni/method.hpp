@@ -34,10 +34,10 @@ namespace jaba::jni
 		using ret_t = RetT;
 
 		// the method itself, what a detour calls to run the real one: self comes first unless static
-		using sig_t = std::conditional_t<is_static, RetT(const ArgsT&...), RetT(const ClassT&, const ArgsT&...)>;
+		using sig_t = std::conditional_t<member::is_static, RetT(const ArgsT&...), RetT(const ClassT&, const ArgsT&...)>;
 
 		// the signature a hook of this method has to have, the original goes after self
-		using detour_t = std::conditional_t<is_static,
+		using detour_t = std::conditional_t<member::is_static,
 			RetT (*)(sig_t*, const ArgsT&...),
 			RetT (*)(const ClassT&, sig_t*, const ArgsT&...)>;
 
@@ -105,7 +105,7 @@ namespace jaba::jni
 
 	public:
 		template <detour_t Detour>
-		using hooked_t = hooked<is_static, Detour>;
+		using hooked_t = hooked<member::is_static, Detour>;
 	};
 
 	// the same method looked up on another class. Members are templated on the most derived
