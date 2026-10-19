@@ -151,4 +151,3 @@ BOOL APIENTRY DllMain(const HMODULE mod, const DWORD reason, [[maybe_unused]] co
 
     return TRUE;
 }
-
