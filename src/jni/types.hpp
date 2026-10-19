@@ -20,12 +20,12 @@
 
 namespace jaba::jni
 {
-	// stands in for "any clazz<M> or type derived from one" in the macros above
+	// stands in for "any clazz<M> or type derived from one, or an array" in the macros above
 	struct clazz_any { };
 
 	template <class T, class Match>
 	inline constexpr bool is_jni_type = std::is_same_v<T, Match>;
 
 	template <class T>
-	inline constexpr bool is_jni_type<T, clazz_any> = sig::detail::clazz_like<T>;
+	inline constexpr bool is_jni_type<T, clazz_any> = sig::detail::clazz_like<T> || sig::detail::array_like<T>;
 }

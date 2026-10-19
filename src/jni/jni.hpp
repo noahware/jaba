@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+#include "array.hpp"
 #include "clazz.hpp"
 #include "field.hpp"
 #include "method.hpp"
