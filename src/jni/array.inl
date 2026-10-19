@@ -124,6 +124,70 @@ namespace jaba::jni
 			return *this;
 		}
 
+		// arr[i] += 1 and the other compound assignments, for the element types the operator
+		// exists for (no %= on a double, nothing on a class). Each one is a read and then a
+		// write, two jni calls, so not atomic
+#define JABA_ELEMENT_COMPOUND(op) \
+		template <class U> \
+			requires (std::is_arithmetic_v<T> && requires(T& val, const U& rhs) { val op##= rhs; }) \
+		element_ref& operator op##=(const U& rhs) \
+		{ \
+			T val = get(); \
+			val op##= rhs; \
+			arr_.set(i_, val); \
+			return *this; \
+		}
+		JABA_ELEMENT_COMPOUND(+)
+		JABA_ELEMENT_COMPOUND(-)
+		JABA_ELEMENT_COMPOUND(*)
+		JABA_ELEMENT_COMPOUND(/)
+		JABA_ELEMENT_COMPOUND(%)
+		JABA_ELEMENT_COMPOUND(&)
+		JABA_ELEMENT_COMPOUND(|)
+		JABA_ELEMENT_COMPOUND(^)
+		JABA_ELEMENT_COMPOUND(<<)
+		JABA_ELEMENT_COMPOUND(>>)
+#undef JABA_ELEMENT_COMPOUND
+
+		// ++arr[i] gives the proxy back, arr[i]++ the value it had
+		element_ref& operator++()
+			requires std::is_arithmetic_v<T>
+		{
+			T val = get();
+			++val;
+			arr_.set(i_, val);
+			return *this;
+		}
+
+		element_ref& operator--()
+			requires std::is_arithmetic_v<T>
+		{
+			T val = get();
+			--val;
+			arr_.set(i_, val);
+			return *this;
+		}
+
+		T operator++(int)
+			requires std::is_arithmetic_v<T>
+		{
+			const T old = get();
+			T val = old;
+			++val;
+			arr_.set(i_, val);
+			return old;
+		}
+
+		T operator--(int)
+			requires std::is_arithmetic_v<T>
+		{
+			const T old = get();
+			T val = old;
+			--val;
+			arr_.set(i_, val);
+			return old;
+		}
+
 		// arr[i]->method() for an element that is a class, the same as a field has
 		struct val_holder
 		{
