@@ -3,6 +3,7 @@
 #include "env.hpp"
 
 using namespace jaba;
+using namespace jaba::jni;
 
 namespace
 {
@@ -12,9 +13,9 @@ namespace
 	}
 }
 
-find_class_fn jaba::find_class = default_find_class;
+find_class_fn jaba::jni::find_class = default_find_class;
 
-void jaba::set_find_class_fn(const find_class_fn fn)
+void jaba::jni::set_find_class_fn(const find_class_fn fn)
 {
 	find_class = fn;
 }

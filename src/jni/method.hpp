@@ -6,7 +6,7 @@
 #include "object.hpp"
 #include "wrap.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	namespace detail
 	{

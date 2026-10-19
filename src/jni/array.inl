@@ -4,7 +4,7 @@
 #include "member.hpp"
 #include "types.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class T>
 	T array<T>::get(const std::size_t i) const noexcept

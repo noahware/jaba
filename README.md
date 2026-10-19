@@ -97,20 +97,20 @@ void on_jump(const entity_living_base& self, const entity_living_base::jump_mhk_
 }
 ```
 
-Hooks that could not find their method (e.g. mappings not loaded yet) are queued, and can be placed with `jaba::flush_queued_hooks`:
+Hooks that could not find their method (e.g. mappings not loaded yet) are queued, and can be placed with `jaba::jni::flush_queued_hooks`:
 
 ```cpp
-jaba::flush_queued_hooks();
+jaba::jni::flush_queued_hooks();
 ```
 
-You should call `jaba::flush_queued_hooks` once mappings are loaded and Jaba is initialized.
+You should call `jaba::jni::flush_queued_hooks` once mappings are loaded and Jaba is initialized.
 
 ### Mappings
 
-Classes, fields and methods are defined by their unobfuscated names, `jaba::load_mappings` maps them to the obfuscated names:
+Classes, fields and methods are defined by their unobfuscated names, `jaba::jni::load_mappings` maps them to the obfuscated names:
 
 ```cpp
-jaba::load_mappings({
+jaba::jni::load_mappings({
     { "net/minecraft/client/Minecraft", "ave" },
     { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
     { "net/minecraft/entity/Entity", "pk" },
@@ -124,7 +124,7 @@ jaba::load_mappings({
 
 Classes are looked up once (on first use) with `JNIEnv::FindClass` and cached as a global ref.
 
-`jaba::set_find_class_fn` replaces the lookup. It takes a `jclass(*)(zstring_view)` that receives the (mapped) class name and returns the class, or `nullptr` if it could not be found (Jaba then throws `unable to find class '<name>'`).
+`jaba::jni::set_find_class_fn` replaces the lookup. It takes a `jclass(*)(zstring_view)` that receives the (mapped) class name and returns the class, or `nullptr` if it could not be found (Jaba then throws `unable to find class '<name>'`).
 
 ```cpp
 // the default one already does FindClass, so here use a classloader or something
@@ -135,7 +135,7 @@ jclass find_class_replacement(const jaba::zstring_view name)
     return env->FindClass(name.data());
 }
 
-jaba::set_find_class_fn(find_class_replacement);
+jaba::jni::set_find_class_fn(find_class_replacement);
 ```
 
 Set it before any class is first used, as the result of the lookup is cached for the lifetime of the program.

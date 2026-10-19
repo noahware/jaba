@@ -1,6 +1,6 @@
 #pragma once
 
-namespace jaba
+namespace jaba::jni
 {
 	using hook_install_fn = void (*)();
 

@@ -11,7 +11,7 @@
 #define JABA_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
-namespace jaba
+namespace jaba::jni
 {
 	// Loc of a static member, there is no instance to find
 	struct static_loc { };

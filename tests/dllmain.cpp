@@ -79,25 +79,25 @@ namespace
             FreeLibraryAndExitThread(mod, 0);
         }
 
-        jaba::load_mappings({
-		    { "net/minecraft/client/Minecraft", "ave" },
-		    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
-		    { "net/minecraft/entity/Entity", "pk" },
-		    { "posX", "s" },
-		    { "posY", "t" },
-		    { "posZ", "u" },
-		    { "jump", "bF" },
-		    { "rotationYaw", "y" },
-		    { "rotationPitch", "z" },
-		    { "thePlayer", "h" },
-		    { "setSprinting", "d" },
-		    { "onGround", "C" },
-		    { "theMinecraft", "S" },
+        jaba::jni::load_mappings({
+			    { "net/minecraft/client/Minecraft", "ave" },
+			    { "net/minecraft/client/entity/EntityPlayerSP", "bew" },
+			    { "net/minecraft/entity/Entity", "pk" },
+			    { "posX", "s" },
+			    { "posY", "t" },
+			    { "posZ", "u" },
+			    { "jump", "bF" },
+			    { "rotationYaw", "y" },
+			    { "rotationPitch", "z" },
+			    { "thePlayer", "h" },
+			    { "setSprinting", "d" },
+			    { "onGround", "C" },
+			    { "theMinecraft", "S" },
         });
 
         // the mappings have to be loaded before a hook can find its method, the flush in
         // jaba::init found none and left the hooks queued
-        jaba::flush_queued_hooks();
+        jaba::jni::flush_queued_hooks();
 
         while (!GetAsyncKeyState(VK_DELETE))
         {

@@ -14,7 +14,7 @@
 #define JABA_EMPTY_BASES
 #endif
 
-namespace jaba
+namespace jaba::jni
 {
 	using find_class_fn = jclass(*)(zstring_view);
 

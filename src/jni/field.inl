@@ -5,7 +5,7 @@
 #include "signature.hpp"
 #include "types.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class ValT, class ClassT, fixed_string Mapping, class Loc>
 	jfieldID field<ValT, ClassT, Mapping, Loc>::native()

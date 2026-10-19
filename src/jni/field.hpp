@@ -6,7 +6,7 @@
 #include "member.hpp"
 #include "wrap.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class ValT, class ClassT, fixed_string Mapping, class Loc>
 	class field : public clazz_member<ClassT, Mapping, Loc>

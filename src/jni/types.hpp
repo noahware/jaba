@@ -16,9 +16,9 @@
 // primitives plus the clazz<> case (stored in a field as an object)
 #define JABA_FOREACH_JNI_TYPE_EX(X) \
 	JABA_FOREACH_JNI_TYPE(X) \
-	X(::jaba::clazz_any, Object)
+	X(::jaba::jni::clazz_any, Object)
 
-namespace jaba
+namespace jaba::jni
 {
 	// stands in for "any clazz<M> or type derived from one" in the macros above
 	struct clazz_any { };

@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include "util/zstring_view.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	struct string_hash
 	{

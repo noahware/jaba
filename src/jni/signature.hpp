@@ -7,7 +7,7 @@
 #include <jni/jni.h>
 #include "../util/fixed_string.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	namespace sig
 	{

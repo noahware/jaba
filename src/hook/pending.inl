@@ -4,7 +4,7 @@
 #include <exception>
 #include <vector>
 
-namespace jaba
+namespace jaba::jni
 {
 	namespace detail
 	{

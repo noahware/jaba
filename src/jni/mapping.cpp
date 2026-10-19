@@ -5,10 +5,10 @@
 
 namespace
 {
-	jaba::mappings_t mappings;
+	jaba::jni::mappings_t mappings;
 }
 
-jaba::zstring_view jaba::fetch_mapping(const zstring_view unobf_name)
+jaba::zstring_view jaba::jni::fetch_mapping(const zstring_view unobf_name)
 {
 	if (unobf_name == "<init>")
 		return unobf_name;
@@ -24,7 +24,7 @@ jaba::zstring_view jaba::fetch_mapping(const zstring_view unobf_name)
 	return it->second;
 }
 
-void jaba::load_mappings(mappings_t map)
+void jaba::jni::load_mappings(mappings_t map)
 {
 	mappings = std::move(map);
 }

@@ -6,7 +6,7 @@
 #include "env.hpp"
 #include "wrap.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	class object : public jni_wrap<jobject>
 	{

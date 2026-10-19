@@ -2,7 +2,7 @@
 #include <util/fixed_string.hpp>
 #include "mapping.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class T>
 	class jni_wrap

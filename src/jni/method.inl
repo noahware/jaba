@@ -7,7 +7,7 @@
 #include "signature.hpp"
 #include "types.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
 	jmethodID method<ClassT, Mapping, Loc, RetT, ArgsT...>::native()

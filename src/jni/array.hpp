@@ -4,7 +4,7 @@
 #include "object.hpp"
 #include "env.hpp"
 
-namespace jaba
+namespace jaba::jni
 {
 	template <class T>
 	class array : public object
