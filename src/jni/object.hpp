@@ -1,4 +1,5 @@
 #pragma once
+#include <compare>
 #include <concepts>
 #include <cstdint>
 #include <optional>
@@ -72,6 +73,18 @@ namespace jaba::jni
 		{
 			return jni::env()->IsSameObject(obj_, other.obj_) == JNI_TRUE;
 		}
+
+		// == is whether both are the same java object. Not the handles: a copy of a ref has a
+		// handle of its own, and without this they would be compared through the conversion
+		// to jobject. Classes that have a java equals (the sdk's) compare by that instead
+		[[nodiscard]] friend bool operator==(const object& a, const object& b)
+		{
+			return a.same_as(b);
+		}
+
+		// there is no ordering, the handles' would be an arbitrary one that a std::map would
+		// quietly use. Classes that are Comparable (the sdk's) have their own
+		friend std::strong_ordering operator<=>(const object&, const object&) = delete;
 
 		// T is a clazz<> type
 		template <class T>

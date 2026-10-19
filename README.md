@@ -229,7 +229,7 @@ const local_player player = minecraft::mc->player;
 saved_player = player.as_global();
 ```
 
-`is_global` and `is_local` tell which one it is.
+`is_global` and `is_local` tell which one it is. `==` compares the objects and not the references, a copy is equal to the one it was made from.
 
 `release` gives the reference up without deleting it, to return an object from a native method, and `reset` deletes it early. A class made from a raw `jobject` takes ownership of the reference, so give it a copy if the reference is not yours:
 
@@ -254,6 +254,17 @@ const int length = str.length();
 const std::string upper = str.to_upper_case().to_std();
 ```
 
+Strings add, compare and print like the C++ ones. `+` is Java's concatenation, anything that is not text goes through `String.valueOf` (and a null is `"null"`). `std::format` prints any SDK object as its `toString`, `to_std` does the same as a `std::string`:
+
+```cpp
+jaba::string greeting = str + " world " + 5;
+
+greeting += '!';
+
+if (greeting == "hello world 5!")
+    LOG("{}", greeting);
+```
+
 ### Collections
 
 Constructors are always called `create`. Literals and numbers are boxed when an `object` is asked for, and any iterable works in a range-for:
@@ -265,7 +276,7 @@ list.add("one");
 list.add(2);
 
 for (const jaba::object& obj : list)
-    LOG("{}", obj.to_string().to_std());
+    LOG("{}", obj);
 ```
 
 Generics are erased in Java, so elements are `object`. `as<T>` casts one without checking, `try_as<T>` checks first:
@@ -276,9 +287,36 @@ const jaba::integer two = list.get(1).as<jaba::integer>();
 
 A class converts to the classes it extends, so an `integer` can be passed where a `number` or `object` is asked for. Only exact types are boxed, a `char` becomes an `Integer` and the wider integer types are ambiguous (cast them).
 
+### Comparing
+
+`==` on the SDK classes is Java's `equals` and `<` is `compareTo` (strings and the boxed numbers), `std::hash` is `hashCode`. They work as keys:
+
+```cpp
+std::map<jaba::string, int> counts;
+std::unordered_set<jaba::integer> seen;
+```
+
+A class that is not from the SDK has no `equals`, so `==` on it is whether it is the same object (`same_as`), and it can not be ordered.
+
 ### Exceptions
 
-A Java exception thrown by a call is cleared and rethrown as a `std::runtime_error`.
+A Java exception thrown by a call is rethrown as a `jaba::jni::java_exception`. It is a `std::runtime_error` that keeps what was thrown, and `is_a` checks the type, subclasses included:
+
+```cpp
+try
+{
+    jaba::integer::parse_int("abc");
+}
+catch (const jaba::jni::java_exception& e)
+{
+    LOG("{}: {}", e.class_name(), e.message());
+
+    if (e.is_a<jaba::illegal_argument_exception>())
+        LOG("bad argument");
+}
+```
+
+`as<T>` gives the throwable as a class, and the exception can be copied and kept as it holds a global reference.
 
 ### Adding classes
 

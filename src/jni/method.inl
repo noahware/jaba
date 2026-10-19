@@ -4,6 +4,7 @@
 #include "method.hpp"
 #include "clazz.hpp"
 #include "env.hpp"
+#include "exception.hpp"
 #include "signature.hpp"
 #include "types.hpp"
 
@@ -43,15 +44,12 @@ namespace jaba::jni
 	template <class ClassT, fixed_string Mapping, class Loc, class RetT, class... ArgsT>
 	RetT method<ClassT, Mapping, Loc, RetT, ArgsT...>::invoke(JNIEnv* const env, const jmethodID id, const jobject target, const ArgsT&... args)
 	{
-		// has to run right after the call, before the result is wrapped
+		// has to run right after the call, before the result is wrapped. What java threw is kept
+		// in the exception (see java_exception)
 		const auto check = [env]
 		{
 			if (env->ExceptionCheck())
-			{
-				env->ExceptionClear();
-
-				throw std::runtime_error(std::format("method {} {} threw exception", Mapping.view(), std::string_view{ ClassT::mapping() }));
-			}
+				throw java_exception::take(env, std::format("thrown by method {} of {}", Mapping.view(), std::string_view{ ClassT::mapping() }));
 		};
 
 		if constexpr (is_constructor())

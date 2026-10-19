@@ -31,6 +31,14 @@ namespace jaba::inline lang
 		{
 			return this->int_value();
 		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", integer)
+
+		// a < b ... by compareTo, == is equals
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
+		}
 	JABA_CLASS_END(integer)
 
 	JABA_CLASS_BEGIN(long_, "java/lang/Long", number)
@@ -49,6 +57,13 @@ namespace jaba::inline lang
 		{
 			return this->long_value();
 		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", long_)
+
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
+		}
 	JABA_CLASS_END(long_)
 
 	JABA_CLASS_BEGIN(float_, "java/lang/Float", number)
@@ -64,6 +79,13 @@ namespace jaba::inline lang
 		[[nodiscard]] explicit operator jfloat() const
 		{
 			return this->float_value();
+		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", float_)
+
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
 		}
 	JABA_CLASS_END(float_)
 
@@ -81,6 +103,13 @@ namespace jaba::inline lang
 		{
 			return this->double_value();
 		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", double_)
+
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
+		}
 	JABA_CLASS_END(double_)
 
 	JABA_CLASS_BEGIN(boolean, "java/lang/Boolean", object)
@@ -97,6 +126,13 @@ namespace jaba::inline lang
 		{
 			return this->boolean_value();
 		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", boolean)
+
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
+		}
 	JABA_CLASS_END(boolean)
 
 	JABA_CLASS_BEGIN(character, "java/lang/Character", object)
@@ -111,6 +147,13 @@ namespace jaba::inline lang
 		[[nodiscard]] explicit operator jchar() const
 		{
 			return this->char_value();
+		}
+
+		JABA_METHOD(jint, compare_to, "compareTo", character)
+
+		[[nodiscard]] friend std::strong_ordering operator<=>(const jaba_self& a, const jaba_self& b)
+		{
+			return detail::compare_objects(a, b);
 		}
 	JABA_CLASS_END(character)
 
