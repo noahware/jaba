@@ -107,7 +107,7 @@ You should call `jaba::jni::flush_queued_hooks` once mappings are loaded and Jab
 
 ### Mappings
 
-Classes, fields and methods are defined by their unobfuscated names, `jaba::jni::load_mappings` maps them to the obfuscated names:
+Classes, fields and methods are defined by their unobfuscated names, `jaba::jni::load_mappings` maps them to the obfuscated names. Names that are not in the map are used as they are:
 
 ```cpp
 jaba::jni::load_mappings({
@@ -139,6 +139,74 @@ jaba::jni::set_find_class_fn(find_class_replacement);
 ```
 
 Set it before any class is first used, as the result of the lookup is cached for the lifetime of the program.
+
+### Constructors
+
+`JABA_CONSTRUCTOR` takes the argument types of a constructor. Constructors overload like in Java, so they all share one name:
+
+```cpp
+JABA_CLASS_BEGIN(vec3, "net/minecraft/util/Vec3")
+    JABA_CONSTRUCTOR(create, jdouble, jdouble, jdouble)
+    JABA_CONSTRUCTOR(create, jint)
+JABA_CLASS_END(vec3)
+
+const vec3 vec = vec3::create(1.0, 2.0, 3.0);
+```
+
+## Java SDK
+
+`sdk/sdk.hpp` has the Java standard library defined as Jaba classes, so you don't have to define `String` or `ArrayList` yourself. Only what exists on Java 8 and up is in it.
+
+Packages are namespaces without the `java` prefix, and `java.lang` has no namespace. `java.lang.String` is `jaba::string` and `java.util.ArrayList` is `jaba::util::array_list`. The names are snake_case, with an underscore at the end where the name is a C++ keyword (`long_`, `float_`, `double_`, `class_`).
+
+### Strings
+
+A string can be made from a literal or a `std::string`, and `to_std` reads it back:
+
+```cpp
+const jaba::string str = "hello";
+
+const int length = str.length();
+const std::string upper = str.to_upper_case().to_std();
+```
+
+### Collections
+
+Constructors are always called `create`. Literals and numbers are boxed when an `object` is asked for, and any iterable works in a range-for:
+
+```cpp
+jaba::util::array_list list = jaba::util::array_list::create();
+
+list.add("one");
+list.add(2);
+
+for (const jaba::object& obj : list)
+    LOG("{}", obj.to_string().to_std());
+```
+
+Generics are erased in Java, so elements are `object`. `as<T>` casts one without checking, `try_as<T>` checks first:
+
+```cpp
+const jaba::integer two = list.get(1).as<jaba::integer>();
+```
+
+A class converts to the classes it extends, so an `integer` can be passed where a `number` or `object` is asked for. Only exact types are boxed, a `char` becomes an `Integer` and the wider integer types are ambiguous (cast them).
+
+### Exceptions
+
+A Java exception thrown by a call is cleared and rethrown as a `std::runtime_error`.
+
+### Adding classes
+
+Anything that is not defined can be added like any other class. Extend an SDK class to get its methods, `jaba::object` gives `to_string`, `hash_code`, `equals` and `get_class`:
+
+```cpp
+JABA_CLASS_BEGIN(stack, "java/util/Stack", jaba::util::collection)
+    JABA_METHOD(jaba::object, push, "push", jaba::object)
+JABA_CLASS_END(stack)
+```
+
+A class should only extend one chain of classes. Reaching the same base twice (a diamond) is ambiguous.
 
 ## Standalone hooks
 ### Detours

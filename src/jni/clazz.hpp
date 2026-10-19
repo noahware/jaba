@@ -39,7 +39,12 @@ namespace jaba::jni
 				const jclass local = find_class(mapping());
 
 				if (!local)
+				{
+					// FindClass left a NoClassDefFoundError pending, and jni calls made with
+					// one pending are undefined (it would also come out of the next native return)
+					jni::env()->ExceptionClear();
 					throw std::runtime_error(std::format("unable to find class '{}'", Mapping.view()));
+				}
 
 				const auto global = static_cast<jclass>(jni::env()->NewGlobalRef(local));
 				jni::env()->DeleteLocalRef(local);

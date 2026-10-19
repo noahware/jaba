@@ -19,15 +19,16 @@ public class Target
 
 		int before = t.add(2, 3);
 		boolean installed = install();
+		boolean sdk = sdk();
 		int hooked = t.add(2, 3);
 		boolean removed = uninstall();
 		int after = t.add(2, 3);
 
-		System.out.println("installed=" + installed + " removed=" + removed);
+		System.out.println("installed=" + installed + " removed=" + removed + " sdk=" + sdk);
 		System.out.println("before=" + before + " hooked=" + hooked + " after=" + after);
 
 		// the detour calls the original and adds 100
-		if (!installed || !removed || before != 5 || hooked != 105 || after != 5)
+		if (!installed || !removed || !sdk || before != 5 || hooked != 105 || after != 5)
 		{
 			System.out.println("FAIL");
 			System.exit(1);
@@ -37,6 +38,8 @@ public class Target
 	}
 
 	static native boolean install();
+
+	static native boolean sdk();
 
 	static native boolean uninstall();
 }

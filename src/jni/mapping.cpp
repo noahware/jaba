@@ -1,8 +1,5 @@
 #include "mapping.hpp"
 
-#include <format>
-#include <stdexcept>
-
 namespace
 {
 	jaba::jni::mappings_t mappings;
@@ -18,8 +15,10 @@ jaba::zstring_view jaba::jni::fetch_mapping(const zstring_view unobf_name)
 
 	const auto it = mappings.find(unobf_name);
 
+	// not every name is obfuscated (the jdk's never are), those are used as they are, a wrong
+	// one still fails at the jni lookup and that error names it
 	if (it == mappings.end())
-		throw std::runtime_error(std::format("unable to find mapping '{}'", std::string_view{ unobf_name }));
+		return unobf_name;
 
 	return it->second;
 }

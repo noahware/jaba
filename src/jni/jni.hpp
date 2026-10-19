@@ -1,5 +1,8 @@
 #pragma once
+#include <concepts>
 #include <cstddef>
+#include <type_traits>
+#include <utility>
 #include "clazz.hpp"
 #include "field.hpp"
 #include "method.hpp"
@@ -17,6 +20,23 @@ namespace jaba::jni
 		template <class Self>
 		struct apply : Ts::template members<Self>... { };
 	};
+
+	// Members has a static jaba_make(A) that builds its own class (see JABA_CLASS_END). A concept
+	// and not an inline requires, a member that doesn't exist is only a soft failure when
+	// the class it's looked up in is dependent.
+	// Never for a jobject or an object, they convert to jobject and that goes on to bool,
+	// which would silently turn one into a boxed boolean. Those use the upcast instead
+	template <class Members, class A>
+	concept makes_from = !std::is_convertible_v<A, jobject> && requires(A&& arg)
+	{
+		{ Members::jaba_make(std::forward<A>(arg)) } -> std::same_as<typename Members::jaba_self>;
+	};
+
+	template <class Members, class A>
+	[[nodiscard]] typename Members::jaba_self make_from(A&& arg)
+	{
+		return Members::jaba_make(std::forward<A>(arg));
+	}
 }
 
 #define JABA_CLASS_BEGIN(name, mapping, ...) \
@@ -58,10 +78,28 @@ namespace jaba::jni
 #define JABA_STATIC_METHOD(ret, name, mapping, ...) \
 		inline static jaba::jni::static_method<jaba_self, mapping, ret __VA_OPT__(,) __VA_ARGS__> name;
 
-// argument types follow the name, none is fine, calling it gives back the new instance:
+// argument types follow the name, none is fine, calling it gives back the new instance. Like
+// in java, constructors overload on their arguments and all share one name:
+//   JABA_CONSTRUCTOR(create)
 //   JABA_CONSTRUCTOR(create, jint, jint)
+//   JABA_CONSTRUCTOR(create, string)
+// Each one is a hidden constructor behind an overload of name that only takes what it can be
+// called with. (__COUNTER__ for the hidden one, each in its own macro: pasting a macro
+// argument keeps it from being expanded first)
 #define JABA_CONSTRUCTOR(name, ...) \
-		JABA_STATIC_METHOD(jaba_self, name, "<init>" __VA_OPT__(,) __VA_ARGS__)
+		JABA_CONSTRUCTOR_ID(name, __COUNTER__ __VA_OPT__(,) __VA_ARGS__)
+
+#define JABA_CONSTRUCTOR_ID(name, id, ...) \
+		JABA_CONSTRUCTOR_IMPL(name, id __VA_OPT__(,) __VA_ARGS__)
+
+#define JABA_CONSTRUCTOR_IMPL(name, id, ...) \
+		JABA_STATIC_METHOD(jaba_self, jaba_ctor_##id, "<init>" __VA_OPT__(,) __VA_ARGS__) \
+		template <class... A> \
+			requires std::is_invocable_v<decltype(jaba_ctor_##id)&, A&&...> \
+		static jaba_self name(A&&... args) \
+		{ \
+			return jaba_ctor_##id(std::forward<A>(args)...); \
+		}
 
 // hooks a method declared above it, the detour is a function declared before the class
 // (qualify it if it's in another namespace):
@@ -71,7 +109,13 @@ namespace jaba::jni
 		using method##_mhk_original = typename jaba::jni::method_in_t<decltype(method), jaba_decl>::sig_t*; \
 		inline static jaba::jni::jni_hook<jaba::jni::method_in_t<decltype(method), jaba_decl>, &detour> method##_hook;
 
-// the explicit instantiation constructs the members' inline statics (the hooks), which would
+// On top of the constructors it inherits, the class gets two conversions:
+//  - from whatever its members build through a static jaba_make(arg) that returns the class
+//    itself, e.g. a string from a literal. Members may define it, none of them have to
+//  - to every class whose members it inherits (an upcast, always valid): the class only mixes
+//    those members in, it is not derived from the class itself
+//
+// The explicit instantiation constructs the members' inline statics (the hooks), which would
 // otherwise never be instantiated and so never queued, it needs name to be complete
 #define JABA_CLASS_END(name) \
 	}; \
@@ -79,6 +123,13 @@ namespace jaba::jni
 	{ \
 	public: \
 		using clazz::clazz; \
+		name() = default; \
+		template <class A> \
+			requires jaba::jni::makes_from<name##_members<name>, A> \
+		name(A&& arg) : name(jaba::jni::make_from<name##_members<name>>(std::forward<A>(arg))) { } \
+		template <std::derived_from<jaba::jni::object> T> \
+			requires (!std::is_same_v<T, name> && std::is_base_of_v<typename T::template members<name>, name>) \
+		[[nodiscard]] operator T() const { return as<T>(); } \
 		template <class Self> \
 		using members = name##_members<Self>; \
 		[[nodiscard]] name as_global() const noexcept\

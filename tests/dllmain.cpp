@@ -5,6 +5,7 @@
 #include "hook/pending.hpp"
 #include "java/java.hpp"
 #include "jni/jni.hpp"
+#include "sdk/sdk.hpp"
 #include "util/image.hpp"
 #include "util/log.hpp"
 
@@ -98,6 +99,22 @@ namespace
         // the mappings have to be loaded before a hook can find its method, the flush in
         // jaba::init found none and left the hooks queued
         jaba::jni::flush_queued_hooks();
+
+        try
+        {
+            // the sdk next to the mappings above, the jdk's names aren't in them
+            const jaba::string text = "hello";
+
+            jaba::util::array_list list = jaba::util::array_list::create();
+            list.add(text);
+            list.add(2);
+
+            LOG("sdk: {} ({} items)", text.to_upper_case().to_std(), list.size());
+        }
+        catch (const std::exception& e)
+        {
+            LOG("sdk failed: {}", e.what());
+        }
 
         while (!GetAsyncKeyState(VK_DELETE))
         {

@@ -2,6 +2,7 @@
 #include <format>
 
 #include "jaba.hpp"
+#include "sdk/sdk.hpp"
 
 #define LOG(...) std::printf("%s\n", std::format(__VA_ARGS__).c_str())
 
@@ -35,6 +36,26 @@ extern "C" JNIEXPORT jboolean JNICALL Java_Target_install(JNIEnv* const env, con
 		LOG("failed to hook add");
 
 	return orig_add != nullptr;
+}
+
+// needs install to have run, that is what initialises jaba
+extern "C" JNIEXPORT jboolean JNICALL Java_Target_sdk([[maybe_unused]] JNIEnv* const env, [[maybe_unused]] const jclass clazz)
+{
+	try
+	{
+		const jaba::string text = "hello";
+
+		jaba::util::array_list list = jaba::util::array_list::create();
+		list.add(text);
+		list.add(2);
+
+		return text.to_upper_case().to_std() == "HELLO" && list.size() == 2;
+	}
+	catch (const std::exception& e)
+	{
+		LOG("sdk failed: {}", e.what());
+		return JNI_FALSE;
+	}
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_Target_uninstall([[maybe_unused]] JNIEnv* const env, [[maybe_unused]] const jclass clazz)
