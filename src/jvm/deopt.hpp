@@ -18,7 +18,7 @@ namespace jaba::jvm::deopt
 
 		inline run_t run_fn = nullptr;
 
-		[[nodiscard]] inline const std::uint8_t* scan(const jaba::util::image* const jvm, const std::string_view bytes)
+		[[nodiscard]] inline const std::uint8_t* scan(const jaba::mem::image* const jvm, const std::string_view bytes)
 		{
 			std::string sig;
 
@@ -29,7 +29,7 @@ namespace jaba::jvm::deopt
 		}
 
 		// the name needs its terminator so deoptimizeMethod does not match deoptimizeMethod0
-		[[nodiscard]] inline void* find_native(const jaba::util::image* const jvm, const std::string_view name, const char* const sig)
+		[[nodiscard]] inline void* find_native(const jaba::mem::image* const jvm, const std::string_view name, const char* const sig)
 		{
 			const std::uint8_t* const str = scan(jvm, name);
 
@@ -46,7 +46,7 @@ namespace jaba::jvm::deopt
 		}
 	}
 
-	[[nodiscard]] inline bool init(JNIEnv* const env, const jaba::util::image* const jvm)
+	[[nodiscard]] inline bool init(JNIEnv* const env, const jaba::mem::image* const jvm)
 	{
 		detail::run_fn = reinterpret_cast<detail::run_t>(detail::find_native(jvm, std::string_view("deoptimizeAll\0", 14), "()V"));
 

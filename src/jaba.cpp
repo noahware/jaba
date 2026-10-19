@@ -22,9 +22,9 @@ bool jaba::init()
 		return false;
 
 #ifdef _WIN32
-	const auto jvm = reinterpret_cast<const util::image*>(GetModuleHandleA("jvm.dll"));
+	const auto jvm = reinterpret_cast<const mem::image*>(GetModuleHandleA("jvm.dll"));
 #else
-	const util::image* const jvm = util::image::find("libjvm.so");
+	const mem::image* const jvm = mem::image::find("libjvm.so");
 #endif
 
 	if (!jvm || !jvm::abstract_interpreter::init(env) || !jvm::deopt::init(env, jvm))

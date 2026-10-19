@@ -1,5 +1,6 @@
 #pragma once
 #include <concepts>
+#include <cstdint>
 #include <optional>
 #include <utility>
 #include <jni/jni.h>

@@ -1,10 +1,11 @@
+
 #pragma once
 #include <cstdint>
 #include <string_view>
 #include <type_traits>
 #include <pe/image.hpp>
 
-namespace jaba::util
+namespace jaba::mem
 {
 	template <class T = std::uint8_t*>
 	[[nodiscard]] T resolve_rel(const std::uint8_t* const base, const std::uint32_t rva_off, const std::uint32_t rip_off)

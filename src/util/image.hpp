@@ -4,7 +4,7 @@
 #ifdef _WIN32
 #include <pe/image.hpp>
 
-namespace jaba::util
+namespace jaba::mem
 {
 	using image = pe::image;
 }
@@ -18,7 +18,7 @@ namespace jaba::util
 #include <vector>
 #include <link.h>
 
-namespace jaba::util
+namespace jaba::mem
 {
 	// loaded elf module, only provides what pe::image does for us (sig_scan)
 	class image
