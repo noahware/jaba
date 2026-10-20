@@ -6,11 +6,11 @@
 //   using namespace jaba;
 //
 //   string s = "hello";                                 // java.lang.String
-//   util::array_list list = util::array_list::create(); // java.util.ArrayList
+//   util::array_list<string> list = util::array_list<string>::create(); // ArrayList<String>
 //   list.add(s);
 //
-//   for (const object& o : list)                        // a java.lang.Iterable
-//       LOG("{}", o.as<string>().to_std());
+//   for (const string& str : list)                      // a java.lang.Iterable
+//       LOG("{}", str.to_std());
 //
 // java.lang is inline (java imports it implicitly), other packages keep their name minus the
 // java prefix: java.util is jaba::util. The names are the java ones in snake_case, and a

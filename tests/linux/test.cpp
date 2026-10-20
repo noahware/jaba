@@ -45,7 +45,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_Target_sdk([[maybe_unused]] JNIEnv* c
 	{
 		const jaba::string text = "hello";
 
-		jaba::util::array_list list = jaba::util::array_list::create();
+		jaba::util::array_list<> list = jaba::util::array_list<>::create();
 		list.add(text);
 		list.add(2);
 

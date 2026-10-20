@@ -105,7 +105,7 @@ namespace
             // the sdk next to the mappings above, the jdk's names aren't in them
             const jaba::string text = "hello";
 
-            jaba::util::array_list list = jaba::util::array_list::create();
+            jaba::util::array_list<> list = jaba::util::array_list<>::create();
             list.add(text);
             list.add(2);
 

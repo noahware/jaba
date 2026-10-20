@@ -241,7 +241,7 @@ const local_player player{ env->NewLocalRef(obj) };
 
 `sdk/sdk.hpp` has the Java standard library defined as Jaba classes, so you don't have to define `String` or `ArrayList` yourself. Only what exists on Java 8 and up is in it.
 
-Packages are namespaces without the `java` prefix, and `java.lang` has no namespace. `java.lang.String` is `jaba::string` and `java.util.ArrayList` is `jaba::util::array_list`. The names are snake_case, with an underscore at the end where the name is a C++ keyword (`long_`, `float_`, `double_`, `class_`).
+Packages are namespaces without the `java` prefix, and `java.lang` has no namespace. `java.lang.String` is `jaba::string` and `java.util.ArrayList` is `jaba::util::array_list<>`. The names are snake_case, with an underscore at the end where the name is a C++ keyword (`long_`, `float_`, `double_`, `class_`).
 
 ### Strings
 
@@ -267,22 +267,52 @@ if (greeting == "hello world 5!")
 
 ### Collections
 
-Constructors are always called `create`. Literals and numbers are boxed when an `object` is asked for, and any iterable works in a range-for:
+Constructors are always called `create`. The collections are generic, `list<string>` is a `List<String>` whose `get` gives a `string`, and any iterable works in a range-for. Literals and numbers are boxed when an element is asked for:
 
 ```cpp
-jaba::util::array_list list = jaba::util::array_list::create();
+jaba::util::array_list<jaba::string> names = jaba::util::array_list<jaba::string>::create();
 
-list.add("one");
-list.add(2);
+names.add("one");
+names.add("two");
 
-for (const jaba::object& obj : list)
-    LOG("{}", obj);
+const jaba::string first = names.get(0);
+
+for (const jaba::string& name : names)
+    LOG("{}", name);
 ```
 
-Generics are erased in Java, so elements are `object`. `as<T>` casts one without checking, `try_as<T>` checks first:
+They nest, and the other collections work the same way (`set`, `hash_set`, `map`, `hash_map`, `map_entry`, `optional`):
 
 ```cpp
-const jaba::integer two = list.get(1).as<jaba::integer>();
+jaba::util::hash_map<jaba::string, jaba::integer> counts = jaba::util::hash_map<jaba::string, jaba::integer>::create();
+
+counts.put("a", 1);
+
+for (const jaba::util::map_entry<jaba::string, jaba::integer>& entry : counts.entry_set())
+    LOG("{} = {}", entry.get_key(), entry.get_value());
+```
+
+The type arguments default to `object` (Java's raw type, `list<>`). Java erases generics, so the type is what the C++ side believes and it is not checked, the same as `as<T>`. A class converts to the ones it extends, whatever their arguments: an `array_list<string>` goes where a `list<string>`, a `collection<>` or a `list<integer>` is asked for. A wrong type is a crash when an element is used, so convert with care.
+
+`try_as<T>` checks an element first:
+
+```cpp
+const jaba::util::list<> anything = names;
+
+if (const auto two = anything.get(1).try_as<jaba::string>())
+    LOG("{}", *two);
+```
+
+The classes as Java declares them (every element an `object`) are in `jaba::util::raw`. Those are what to extend when adding a class.
+
+When a member of your own class uses a generic type, give it a name first: a comma in `map<string, integer>` splits the macro arguments.
+
+```cpp
+using counts_t = jaba::util::map<jaba::string, jaba::integer>;
+
+JABA_CLASS_BEGIN(stats, "example/Stats")
+    JABA_FIELD(counts_t, counts, "counts")
+JABA_CLASS_END(stats)
 ```
 
 A class converts to the classes it extends, so an `integer` can be passed where a `number` or `object` is asked for. Only exact types are boxed, a `char` becomes an `Integer` and the wider integer types are ambiguous (cast them).
@@ -323,7 +353,7 @@ catch (const jaba::jni::java_exception& e)
 Anything that is not defined can be added like any other class. Extend an SDK class to get its methods, `jaba::object` gives `to_string`, `hash_code`, `equals` and `get_class`:
 
 ```cpp
-JABA_CLASS_BEGIN(stack, "java/util/Stack", jaba::util::collection)
+JABA_CLASS_BEGIN(stack, "java/util/Stack", jaba::util::raw::collection)
     JABA_METHOD(jaba::object, push, "push", jaba::object)
 JABA_CLASS_END(stack)
 ```
