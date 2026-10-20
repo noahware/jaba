@@ -69,6 +69,12 @@ namespace jaba::jni
 			return std::exchange(obj_, nullptr);
 		}
 
+		// whether there is an object at all: if (world), !world
+		[[nodiscard]] explicit operator bool() const noexcept
+		{
+			return obj_ != nullptr;
+		}
+
 		[[nodiscard]] bool same_as(const object& other) const
 		{
 			return jni::env()->IsSameObject(obj_, other.obj_) == JNI_TRUE;
