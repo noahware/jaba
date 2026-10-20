@@ -110,6 +110,20 @@ namespace jaba::jni
 		using method##_mhk_original = typename jaba::jni::method_in_t<decltype(method), jaba_decl>::sig_t*; \
 		inline static jaba::jni::jni_hook<jaba::jni::method_in_t<decltype(method), jaba_decl>, &detour> method##_hook;
 
+// JABA_HOOK from outside the class, for a class that can't be edited (the sdk generator's). cls
+// is the class that declares the method, and it goes at namespace scope:
+//   void on_jump(const player& self, JABA_HOOK_ORIGINAL(player, jump) original);
+//   JABA_HOOK_EX(player, jump, on_jump)
+// JABA_HOOK_ORIGINAL is the type of the original, what <method>_mhk_original is in the class.
+// The hook is a variable of this file (static), named by __COUNTER__ since a class has many
+#define JABA_HOOK_ORIGINAL(cls, method) 	jaba::jni::method_in_t<decltype(cls::method), cls>::sig_t*
+
+#define JABA_HOOK_EX(cls, method, detour) 	JABA_HOOK_EX_ID(cls, method, detour, __COUNTER__)
+
+#define JABA_HOOK_EX_ID(cls, method, detour, id) 	JABA_HOOK_EX_IMPL(cls, method, detour, id)
+
+#define JABA_HOOK_EX_IMPL(cls, method, detour, id) 	[[maybe_unused]] static jaba::jni::jni_hook<jaba::jni::method_in_t<decltype(cls::method), cls>, &detour> jaba_hook_##id;
+
 // On top of the constructors it inherits, the class gets two conversions:
 //  - from whatever its members build through a static jaba_make(arg) that returns the class
 //    itself, e.g. a string from a literal. Members may define it, none of them have to
