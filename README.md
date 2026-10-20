@@ -115,6 +115,17 @@ void on_jump(const entity_living_base& self, const entity_living_base::jump_mhk_
 }
 ```
 
+`JABA_HOOK_EX` is the same from outside the class, at namespace scope, for a class that can't be edited (the generated SDK). It takes the class that declares the method, and `JABA_HOOK_ORIGINAL` is the type of the original:
+
+```cpp
+void on_jump(const entity_living_base& self, JABA_HOOK_ORIGINAL(entity_living_base, jump) original)
+{
+    original(self);
+}
+
+JABA_HOOK_EX(entity_living_base, jump, on_jump)
+```
+
 Hooks that could not find their method (e.g. mappings not loaded yet) are queued, and can be placed with `jaba::jni::flush_queued_hooks`:
 
 ```cpp
