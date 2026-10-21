@@ -21,6 +21,14 @@ public class Target
 		boolean installed = install();
 		boolean sdk = sdk();
 		int hooked = t.add(2, 3);
+
+		// the hook has to survive the jit: every call goes through the detour (+100) and the original it calls
+		// gets compiled, a caller that inlined add or a recursing original would break the sum
+		long hot = 0;
+
+		for (int i = 0; i < 2000000; i++)
+			hot += t.add(i, 1);
+
 		boolean removed = uninstall();
 		int after = t.add(2, 3);
 
@@ -28,7 +36,11 @@ public class Target
 		System.out.println("before=" + before + " hooked=" + hooked + " after=" + after);
 
 		// the detour calls the original and adds 100
-		if (!installed || !removed || !sdk || before != 5 || hooked != 105 || after != 5)
+		long hot_expected = 2000000L * 2000001L / 2 + 100L * 2000000L;
+
+		System.out.println("hot=" + hot + " expected=" + hot_expected);
+
+		if (!installed || !removed || !sdk || before != 5 || hooked != 105 || after != 5 || hot != hot_expected)
 		{
 			System.out.println("FAIL");
 			System.exit(1);

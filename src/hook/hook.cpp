@@ -20,12 +20,13 @@ namespace
 
 	struct hook
 	{
-		method* native_method_ptr; // here for jmethodID to reference it
 		jvm_type_copy<method> native_method;
+		method* callable_method_ptr; // jmethodID of the callable original references this
+		jvm_type_copy<method> callable_method;
 		void* orig_interp_entry;
 		void* orig_i2i_entry;
 		method::access_flags orig_acc_flags;
-		std::uint8_t orig_flags;
+		std::uint32_t orig_flags;
 	};
 
 	// key is original method
@@ -33,7 +34,7 @@ namespace
 	std::unordered_map<method*, std::unique_ptr<hook>> hooks;
 
 	// unhook never frees a hook: a thread can already be inside jaba_hk_stub with
-	// native_method_ptr loaded, past the point jaba_hook_c_handler takes hooks_mtx, so there is
+	// native_method loaded into rbx, past the point jaba_hook_c_handler takes hooks_mtx, so there is
 	// no safe point at which to reclaim it. retired hooks are kept alive for the process
 	// lifetime instead of risking a use-after-free on that in-flight call
 	std::vector<std::unique_ptr<hook>> retired_hooks;
@@ -55,6 +56,22 @@ namespace
 		return native_method;
 	}
 
+	// the original the user calls: a copy that keeps the method's own compile flags, so the jit is free to compile it.
+	// the hooked method itself has to stay interpreted, its entries are the stub
+	jvm_type_copy<method> make_callable_original(const method* const m, const method::access_flags acc_flags,
+	                                             const std::uint32_t flags)
+	{
+		jvm_type_copy<method> callable_method = m->copy<method>();
+
+		callable_method->set_acc_flags(acc_flags);
+		callable_method->set_flag_bits(flags);
+
+		// the copy is not in any vtable, so it has to be invoked directly or a virtual call lands back in the hook
+		callable_method->set_vtable_idx(-2);
+
+		return callable_method;
+	}
+
 	std::optional<jmethodID> raw_hook_method(const jmethodID jmethod, const method_detour_t detour,
 	                                         const recompile_method_fn& recompile_method)
 	{
@@ -69,7 +86,7 @@ namespace
 
 		// snapshot the flags before recompile_method can touch them
 		const method::access_flags orig_acc_flags = orig_method->acc_flags();
-		const std::uint8_t orig_flags = orig_method->flags();
+		const std::uint32_t orig_flags = orig_method->flag_bits();
 
 		if (!recompile_method(orig_method))
 			return { };
@@ -87,10 +104,12 @@ namespace
 			return { };
 
 		jvm_type_copy<method> native_method = make_native_handler(orig_method, detour);
+		jvm_type_copy<method> callable_method = make_callable_original(orig_method, orig_acc_flags, orig_flags);
 
 		auto hk = std::make_unique<hook>(hook{
-			.native_method_ptr = native_method.data(),
 			.native_method = std::move(native_method),
+			.callable_method_ptr = callable_method.data(),
+			.callable_method = std::move(callable_method),
 			.orig_interp_entry = orig_method->from_interp_entry(),
 			.orig_i2i_entry = orig_method->i2i_entry(),
 			.orig_acc_flags = orig_acc_flags,
@@ -103,7 +122,7 @@ namespace
 		orig_method->set_from_interp_entry(reinterpret_cast<void*>(jaba_hk_stub));
 		orig_method->set_i2i_entry(reinterpret_cast<void*>(jaba_hk_stub));
 
-		return reinterpret_cast<jmethodID>(&stored.native_method_ptr);
+		return reinterpret_cast<jmethodID>(&stored.callable_method_ptr);
 	}
 
 	// hooks_mtx has to be held exclusively
@@ -119,7 +138,7 @@ namespace
 		orig_method->set_from_interp_entry(hk.orig_interp_entry);
 		orig_method->set_i2i_entry(hk.orig_i2i_entry);
 		orig_method->set_acc_flags(hk.orig_acc_flags);
-		orig_method->set_flags(hk.orig_flags);
+		orig_method->set_flag_bits(hk.orig_flags);
 
 		// move out rather than erase-and-destroy: a thread can still be mid-flight through
 		// jaba_hk_stub using native_method, so the hook outlives its entry in "hooks"
