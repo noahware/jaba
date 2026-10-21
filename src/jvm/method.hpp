@@ -86,7 +86,7 @@ namespace jaba::jvm
 			if (!wide_flags())
 				return flags();
 
-			flags();
+			(void)flags();
 
 			return *reinterpret_cast<const std::uint32_t*>(reinterpret_cast<const std::uint8_t*>(this) + *flags_offset);
 		}
@@ -100,7 +100,7 @@ namespace jaba::jvm
 				return;
 			}
 
-			flags();
+			(void)flags();
 
 			*reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(this) + *flags_offset) = bits;
 		}
