@@ -93,12 +93,16 @@ namespace jaba::inline lang
 		JABA_METHOD(jboolean, equals, "equals", object)
 		JABA_METHOD(class_, get_class, "getClass")
 
-		// ==, java's equals. Exactly the same class on both sides, anything else is the same
-		// object or not (same_as): the handles themselves are never compared, a copy of a ref
-		// has a handle of its own
-		[[nodiscard]] friend bool operator==(const jaba_self& a, const jaba_self& b)
+		// ==, java's equals. The same class, or a class that converts to the one on the other side
+		// (entity == entity_player_sp); anything else is the same object or not (same_as): the
+		// handles themselves are never compared, a copy of a ref has a handle of its own. B is a
+		// template so both sides match exactly, two overloads that each convert one side would be
+		// ambiguous with the reversed candidates
+		template <class B>
+			requires (requires { typename B::jaba_is_object; } && std::convertible_to<const B&, const jaba_self&>)
+		[[nodiscard]] friend bool operator==(const jaba_self& a, const B& b)
 		{
-			return detail::equal_objects(a, b);
+			return detail::equal_objects<jaba_self>(a, b);
 		}
 
 		// toString() as utf8, "null" for null. It's also what std::format prints
