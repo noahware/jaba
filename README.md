@@ -422,7 +422,9 @@ The copied method is also marked as native.
 
 Instead of using JVMTI, it calls internal JVM functions to deoptimise methods. The method and all potentially inlined call sites are deoptimised through calls to these JVM functions.
 
-The method is then forced to be non-compilable and non-inlineable. The `from_interpreted` and `i2i` routines (stubs the JVM calls to transition into the method) are set to an assembly stub we write. In these transition routines, `rbx` holds the method pointer. The assembly checks if that method is hooked, and if it is then `rbx` is set to the *cloned* copy.
+The callable original returned by `hook_method` is a second copy of the method, made with the method's original compile flags and a non-virtual vtable index, so the JIT can compile it and calling the original runs at compiled speed.
+
+The hooked method itself is then forced to be non-compilable and non-inlineable. The `from_interpreted` and `i2i` routines (stubs the JVM calls to transition into the method) are set to an assembly stub we write. In these transition routines, `rbx` holds the method pointer. The assembly checks if that method is hooked, and if it is then `rbx` is set to the *cloned* copy.
 
 The stub then jumps to the default native handler from the JVM, which processes `rbx` as a native C++ method, which calls the detour (user code) that was inserted to the method copy. The user now is in their detour with hooked function parameters already passed via the native calling convention.
 
