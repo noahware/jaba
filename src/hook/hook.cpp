@@ -36,8 +36,10 @@ namespace
 	// unhook never frees a hook: a thread can already be inside jaba_hk_stub with
 	// native_method loaded into rbx, past the point jaba_hook_c_handler takes hooks_mtx, so there is
 	// no safe point at which to reclaim it. retired hooks are kept alive for the process
-	// lifetime instead of risking a use-after-free on that in-flight call
-	std::vector<std::unique_ptr<hook>> retired_hooks;
+	// lifetime instead of risking a use-after-free on that in-flight call.
+	// the vector itself is heap-allocated and intentionally leaked: a namespace-scope vector would be destroyed
+	// at DLL unload and free every hook buffer while the jvm (nmethods, jmethodIDs) still points at them
+	auto& retired_hooks = *new std::vector<std::unique_ptr<hook>>;
 
 	jvm_type_copy<method> make_native_handler(const method* const m, const method_detour_t detour)
 	{
